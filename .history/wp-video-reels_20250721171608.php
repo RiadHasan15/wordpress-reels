@@ -1,0 +1,214 @@
+<?php
+/**
+ * Plugin Name: WP Video Reels with BuddyPress Integration
+ * Description: Upload vertical reels with title and description, BuddyPress profile tabs, and activity updates.
+ * Version: 1.4
+ * Author: Your Name
+ */
+
+// Register 'reel' custom post type
+function wpvr_register_reel_post_type() {
+    register_post_type('reel', array(
+        'labels' => array(
+            'name' => 'Reels',
+            'singular_name' => 'Reel',
+        ),
+        'public' => true,
+        'has_archive' => true,
+        'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
+        'menu_icon' => 'dashicons-video-alt3',
+        'show_in_rest' => true,
+    ));
+}
+add_action('init', 'wpvr_register_reel_post_type');
+
+// Enqueue CSS & JS
+function wpvr_enqueue_scripts() {
+    wp_enqueue_style('wpvr-style', plugin_dir_url(__FILE__) . 'style.css');
+    wp_enqueue_script('wpvr-script', plugin_dir_url(__FILE__) . 'script.js', array(), false, true);
+}
+add_action('wp_enqueue_scripts', 'wpvr_enqueue_scripts');
+
+// Upload form shortcode (title, description, video)
+function wpvr_upload_form_shortcode() {
+    if (!is_user_logged_in()) {
+        return '<p>Please <a href="' . wp_login_url() . '">log in</a> to upload a reel.</p>';
+    }
+
+    $message = '';
+    if (isset($_POST['wpvr_upload_submit']) && !empty($_FILES['wpvr_video_file']['name'])) {
+        $user_id = get_current_user_id();
+
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+        $uploaded = media_handle_upload('wpvr_video_file', 0);
+
+        if (!is_wp_error($uploaded)) {
+            $post_id = wp_insert_post(array(
+                'post_type'    => 'reel',
+                'post_title'   => sanitize_text_field($_POST['wpvr_title']),
+                'post_content' => sanitize_textarea_field($_POST['wpvr_description']),
+                'post_status'  => 'publish',
+                'post_author'  => $user_id,
+            ));
+
+            if ($post_id) {
+                update_post_meta($post_id, 'video_url', wp_get_attachment_url($uploaded));
+
+                // BuddyPress activity update
+                if (function_exists('bp_activity_add')) {
+                    bp_activity_add(array(
+                        'user_id' => $user_id,
+                        'action' => sprintf(__(' %s uploaded a new reel.', 'textdomain'), bp_core_get_userlink($user_id)),
+                        'component' => 'reels',
+                        'type' => 'new_reel',
+                        'item_id' => $post_id,
+                        'primary_link' => get_permalink($post_id),
+                        'recorded_time' => bp_core_current_time(),
+                    ));
+                }
+
+                $message = '<p class="success-message">✅ Upload successful!</p>';
+            } else {
+                $message = '<p class="error-message">❌ Failed to create reel post.</p>';
+            }
+        } else {
+            $message = '<p class="error-message">❌ Upload failed. Please try again.</p>';
+        }
+    }
+
+    ob_start();
+    ?>
+    <?php echo $message; ?>
+    <form method="post" enctype="multipart/form-data" class="wpvr-upload-form">
+        <label>Title:</label><br>
+        <input type="text" name="wpvr_title" required><br><br>
+
+        <label>Description:</label><br>
+        <textarea name="wpvr_description" rows="3" required></textarea><br><br>
+
+        <label>Select MP4 Video:</label><br>
+        <input type="file" name="wpvr_video_file" accept="video/mp4" required><br><br>
+
+        <input type="submit" name="wpvr_upload_submit" value="Upload Reel">
+    </form>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode('video_reel_upload', 'wpvr_upload_form_shortcode');
+
+// Feed shortcode: show vertical full-screen reels feed
+function wpvr_feed_shortcode() {
+    $args = array(
+        'post_type'      => 'reel',
+        'posts_per_page' => -1,
+        'post_status'    => 'publish',
+    );
+    $query = new WP_Query($args);
+
+    ob_start();
+    echo '<div class="wpvr-reels-container">';
+    while ($query->have_posts()) {
+        $query->the_post();
+        $video_url = get_post_meta(get_the_ID(), 'video_url', true);
+        if ($video_url) {
+            ?>
+            <div class="wpvr-reel">
+                <video
+                    src="<?php echo esc_url($video_url); ?>"
+                    autoplay muted loop playsinline
+                    class="reel-video"
+                ></video>
+                <div class="wpvr-sound-toggle">🔇</div>
+                <div class="wpvr-reel-info">
+                    <h3 class="wpvr-reel-title"><?php echo esc_html(get_the_title()); ?></h3>
+                    <p class="wpvr-reel-description"><?php echo esc_html(get_the_excerpt()); ?></p>
+                </div>
+            </div>
+            <?php
+        }
+    }
+    echo '</div>';
+    wp_reset_postdata();
+    return ob_get_clean();
+}
+add_shortcode('video_reel_feed', 'wpvr_feed_shortcode');
+
+
+
+// BuddyPress Integration: Add "Reels" tab to user profiles
+function wpvr_buddypress_profile_nav() {
+    if ( function_exists('bp_is_active') && bp_is_active( 'members' ) ) {
+        bp_core_new_nav_item( array(
+            'name' => 'Reels',
+            'slug' => 'reels',
+            'default_subnav_slug' => 'reels',
+            'position' => 50,
+            'screen_function' => 'wpvr_reels_profile_screen',
+            'show_for_displayed_user' => true,
+        ) );
+    }
+}
+add_action('bp_setup_nav', 'wpvr_buddypress_profile_nav');
+
+function wpvr_reels_profile_screen() {
+    add_action('bp_template_content', 'wpvr_reels_profile_content');
+    bp_core_load_template( apply_filters('bp_core_template_plugin', 'members/single/plugins') );
+}
+
+function wpvr_reels_profile_content() {
+    $user_id = bp_displayed_user_id();
+
+    $args = array(
+        'post_type' => 'reel',
+        'author' => $user_id,
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+    );
+
+    $query = new WP_Query($args);
+
+    if ($query->have_posts()) {
+        echo '<div class="wpvr-user-reels">';
+        while ($query->have_posts()) {
+            $query->the_post();
+            $video_url = get_post_meta(get_the_ID(), 'video_url', true);
+            ?>
+            <div class="wpvr-single-reel-profile" style="margin-bottom: 30px;">
+                <video src="<?php echo esc_url($video_url); ?>" controls style="width:100%; max-width:400px; height:auto;"></video>
+                <h4><?php the_title(); ?></h4>
+                <p><?php the_excerpt(); ?></p>
+            </div>
+            <?php
+        }
+        echo '</div>';
+    } else {
+        echo '<p>No reels found for this user.</p>';
+    }
+    wp_reset_postdata();
+}
+
+// BuddyPress Integration: Add "Upload Reel" tab to user profiles
+function wpvr_buddypress_upload_nav() {
+    if ( function_exists('bp_is_active') && bp_is_active( 'members' ) ) {
+        bp_core_new_nav_item( array(
+            'name' => 'Upload Reel',
+            'slug' => 'upload-reel',
+            'position' => 51,
+            'screen_function' => 'wpvr_upload_reel_screen',
+            'show_for_displayed_user' => true,
+        ) );
+    }
+}
+add_action('bp_setup_nav', 'wpvr_buddypress_upload_nav');
+
+function wpvr_upload_reel_screen() {
+    add_action('bp_template_content', 'wpvr_upload_reel_content');
+    bp_core_load_template( apply_filters('bp_core_template_plugin', 'members/single/plugins') );
+}
+
+function wpvr_upload_reel_content() {
+    echo do_shortcode('[video_reel_upload]');
+}

@@ -1,0 +1,68 @@
+/* Grid feed container */
+.bpr-grid-feed {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 900px;
+    margin: 0 auto 40px auto;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+/* Each grid item */
+.bpr-grid-item {
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #000;
+    aspect-ratio: 9 / 16;
+    /* typical vertical video ratio */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.bpr-grid-item:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.bpr-grid-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    /* disable pointer on video for hover play */
+    user-select: none;
+}
+
+.bpr-grid-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* Responsive grid */
+@media (max-width: 768px) {
+    .bpr-grid-feed {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .bpr-grid-feed {
+        grid-template-columns: 1fr;
+    }
+}

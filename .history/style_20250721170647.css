@@ -1,0 +1,116 @@
+/* Container: full viewport height vertical scroll, snap scroll */
+.wpvr-reels-container {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    background: #000;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE & Edge */
+}
+
+.wpvr-reels-container::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+/* Each reel fills viewport height */
+.wpvr-reel {
+    position: relative;
+    height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+}
+
+/* Video fills the viewport */
+.reel-video {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Mute/unmute button bottom-right inside video */
+.wpvr-sound-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 10;
+}
+
+
+
+
+/* Overlay for title & description bottom-left */
+.wpvr-reel-info {
+    position: absolute;
+    bottom: 80px;
+    left: 20px;
+    right: 20px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    user-select: none;
+    max-height: 120px;
+    overflow: auto;
+}
+
+/* Title styling */
+.wpvr-reel-title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Description styling */
+.wpvr-reel-description {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.3;
+    max-height: 80px;
+    overflow: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .wpvr-sound-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        bottom: 25px;
+        right: 15px;
+    }
+
+    .wpvr-reel-info {
+        bottom: 70px;
+        left: 12px;
+        right: 12px;
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+
+    .wpvr-reel-title {
+        font-size: 20px;
+    }
+
+    .wpvr-reel-description {
+        font-size: 14px;
+    }
+}

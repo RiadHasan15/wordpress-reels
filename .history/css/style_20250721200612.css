@@ -1,0 +1,221 @@
+.bpr-feed {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    position: relative;
+    background: #000;
+
+    /* Hide scrollbar but keep scroll */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+}
+
+.bpr-feed::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+.bpr-video-wrapper {
+    height: 100%;
+    max-width: 100%;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.bpr-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Mute toggle button inside video top-right */
+.bpr-mute-toggle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 28px;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+}
+
+.bpr-mute-toggle:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+/* Overlay with author info and post texts */
+.bpr-overlay {
+    position: absolute;
+    bottom: 48px;
+    left: 16px;
+    right: 16px;
+    color: white;
+    z-index: 5;
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    font-family: 'Arial', sans-serif;
+    user-select: none;
+}
+
+.bpr-author-avatar-link,
+.bpr-author-name-link {
+    text-decoration: none;
+    color: white;
+}
+
+.bpr-author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-position: center;
+    background-size: cover;
+    border: 2px solid white;
+    flex-shrink: 0;
+}
+
+.bpr-author-name {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.bpr-author-texts h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.bpr-author-texts p {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    line-height: 1.3;
+    max-width: 80vw;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
+}
+
+/* Pause/Play icons styling */
+.bpr-pause-icon,
+.bpr-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 72px;
+    color: rgba(255, 255, 255, 0.85);
+    user-select: none;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 20;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.bpr-pause-icon.show,
+.bpr-play-icon.show {
+    opacity: 1;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .bpr-author-texts p {
+        max-width: 70vw;
+    }
+
+    .bpr-author-name {
+        font-size: 14px;
+    }
+
+    .bpr-author-texts h3 {
+        font-size: 16px;
+    }
+}
+
+
+
+
+/* Upload form styling - minimal, clean, light background */
+.bpr-upload-form {
+    max-width: 600px;
+    margin: 0 auto 40px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+    color: #222;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+.bpr-upload-form input[type="text"],
+.bpr-upload-form textarea,
+.bpr-upload-form input[type="file"] {
+    background: #fafafa;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 10px;
+    color: #222;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.bpr-upload-form input[type="text"]:focus,
+.bpr-upload-form textarea:focus,
+.bpr-upload-form input[type="file"]:focus {
+    outline: none;
+    border-color: #0073aa;
+    background: #fff;
+}
+
+.bpr-upload-form button.button-primary {
+    background: #0073aa;
+    border-color: #0073aa;
+    color: #fff;
+    cursor: pointer;
+    padding: 10px 18px;
+    font-size: 15px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.bpr-upload-form button.button-primary:hover {
+    background: #005177;
+    border-color: #005177;
+}
+
+/* Message boxes - success and error */
+.bpr-message {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 15px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    box-sizing: border-box;
+}
+
+.bpr-success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+}
+
+.bpr-error {
+    background-color: #f2dede;
+    color: #a94442;
+    border: 1px solid #ebccd1;
+}

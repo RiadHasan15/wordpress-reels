@@ -1,0 +1,155 @@
+.bpr-feed {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    position: relative;
+    background: #000;
+
+    /* Hide scrollbar but keep scroll */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 10+ */
+}
+
+.bpr-feed::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+.bpr-video-wrapper {
+    height: 100vh;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
+}
+
+.bpr-video {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Mute toggle button INSIDE each video, top-right */
+.bpr-mute-toggle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 28px;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+}
+
+.bpr-mute-toggle:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+/* Overlay containing avatar + username + texts */
+.bpr-overlay {
+    position: absolute;
+    bottom: 40px;
+    left: 20px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    max-width: 90%;
+    pointer-events: none;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+/* Avatar link */
+.bpr-author-avatar-link {
+    flex-shrink: 0;
+    pointer-events: auto;
+    text-decoration: none;
+}
+
+/* Circular avatar container */
+.bpr-author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center center;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+}
+
+/* Username link */
+.bpr-author-name-link {
+    font-weight: 600;
+    font-size: 16px;
+    color: #fff;
+    text-decoration: none;
+    user-select: text;
+    pointer-events: auto;
+    white-space: nowrap;
+    margin-top: 14px;
+    /* align vertically with avatar */
+}
+
+/* Hover effect for username */
+.bpr-author-name-link:hover {
+    text-decoration: underline;
+}
+
+/* Title and description container */
+.bpr-author-texts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+    pointer-events: none;
+    margin-left: 12px;
+}
+
+.bpr-author-texts h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bpr-author-texts p {
+    margin: 0;
+    font-size: 14px;
+    max-height: 36px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bpr-pause-icon,
+.bpr-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 80px;
+    color: black;
+    /* changed from white to black */
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+    z-index: 20;
+
+    /* Start scaled down for animation */
+    transform: translate(-50%, -50%) scale(0);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Show animation with fade + scale */
+.bpr-pause-icon.show,
+.bpr-play-icon.show {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+}

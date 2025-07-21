@@ -1,0 +1,61 @@
+.bpr-reels-wrapper {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+}
+
+.bpr-reel {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.bpr-reel video {
+    height: 100vh;
+    width: auto;
+    object-fit: cover;
+}
+
+.bpr-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 20px;
+    color: #fff;
+    z-index: 2;
+}
+
+.bpr-meta {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    max-width: 80%;
+}
+
+.bpr-sound-toggle {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.bpr-pause-icon,
+.bpr-play-icon {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    display: none;
+    z-index: 10;
+    opacity: 0.8;
+}

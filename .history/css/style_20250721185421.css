@@ -1,0 +1,67 @@
+.bpr-feed {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    position: relative;
+    background: #000;
+}
+
+.bpr-video-wrapper {
+    height: 100vh;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
+}
+
+.bpr-video {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.bpr-overlay {
+    position: absolute;
+    bottom: 60px;
+    left: 20px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    max-width: 80%;
+    pointer-events: none;
+}
+
+.bpr-overlay h3 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+}
+
+.bpr-overlay p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.bpr-mute-toggle {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: white;
+    background: rgba(0,0,0,0.6);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    z-index: 9999;
+    user-select: none;
+}
+
+.bpr-pause-icon, .bpr-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 64px;
+    color: white;
+    transform: translate(-50%, -50%);
+    display: none;
+    pointer-events: none;
+    opacity: 0.8;
+}

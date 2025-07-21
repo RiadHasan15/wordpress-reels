@@ -1,0 +1,114 @@
+.bpr-feed {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    position: relative;
+    background: #000;
+}
+
+.bpr-video-wrapper {
+    height: 100vh;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
+}
+
+.bpr-video {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Mute toggle button INSIDE each video, top-right */
+.bpr-mute-toggle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 28px;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+}
+
+.bpr-mute-toggle:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+/* Overlay containing avatar + texts */
+.bpr-overlay {
+    position: absolute;
+    bottom: 40px;
+    left: 20px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    max-width: 90%;
+    pointer-events: none;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Circular avatar container */
+.bpr-author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center center;
+    flex-shrink: 0;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+}
+
+/* Title and description container */
+.bpr-author-texts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.bpr-author-texts h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bpr-author-texts p {
+    margin: 0;
+    font-size: 14px;
+    max-height: 36px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bpr-pause-icon,
+.bpr-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 80px;
+    color: white;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    user-select: none;
+    z-index: 20;
+}
+
+.bpr-pause-icon.show,
+.bpr-play-icon.show {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1);
+}

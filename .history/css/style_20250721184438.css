@@ -1,0 +1,85 @@
+.bpr-reels-container {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    height: 90vh;
+    scroll-snap-type: y mandatory;
+}
+
+.bpr-reel-frame {
+    position: relative;
+    height: 90vh;
+    scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+}
+
+.bpr-video {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.bpr-overlay {
+    position: absolute;
+    bottom: 60px;
+    left: 20px;
+    color: white;
+    text-shadow: 0 0 5px #000;
+}
+
+.bpr-title {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.bpr-description {
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+.bpr-sound-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 26px;
+    color: white;
+    cursor: pointer;
+    z-index: 999;
+}
+
+.bpr-pause-icon,
+.bpr-play-icon {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    color: white;
+    display: none;
+    z-index: 10;
+}
+
+.bpr-reel-frame.paused .bpr-pause-icon {
+    display: block;
+    animation: fadeOut 1s forwards;
+}
+
+.bpr-reel-frame.resumed .bpr-play-icon {
+    display: block;
+    animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}

@@ -1,0 +1,84 @@
+/* Vertical feed */
+.bpr-feed { max-width:480px!important; width:100%!important; height:calc(100vh - 80px)!important; margin:0 auto!important; overflow-y:scroll!important; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; background:#000; position:relative; }
+.bpr-feed::-webkit-scrollbar { display:none; }
+.bpr-video-wrapper { width:100%!important; height:calc(100vh - 80px)!important; position:relative; scroll-snap-align:start; background:#000; }
+.bpr-video { width:100%!important; height:100%!important; object-fit:cover; cursor:pointer; }
+.bpr-mute-toggle { position:absolute; top:12px; right:12px; font-size:24px; color:#fff; background:rgba(0,0,0,0.35); padding:4px; border-radius:50%; cursor:pointer; z-index:10; }
+.bpr-overlay { position:absolute; bottom:24px; left:12px; right:12px; display:flex; align-items:center; color:#fff; z-index:10; text-shadow:0 0 6px rgba(0,0,0,0.8); }
+.bpr-author-avatar-link { width:48px;height:48px;border-radius:50%; overflow:hidden; border:2px solid #fff; }
+.bpr-author-avatar { width:100%; height:100%; background-size:cover; }
+.bpr-author-name-link { color:#fff; font-weight:600; margin-left:8px; text-decoration:none; }
+.bpr-author-texts { margin-left:12px; max-width: calc(100% - 80px); }
+.bpr-author-texts h3 { margin:0;font-size:18px; }
+.bpr-author-texts p { margin:4px 0 0; font-size:14px; opacity:0.85; }
+.bpr-pause-icon, .bpr-play-icon { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:64px; background:rgba(255,255,255,0.8); border-radius:50%; padding:16px; opacity:0; pointer-events:none; transition:opacity .3s; }
+.bpr-pause-icon.show, .bpr-play-icon.show { opacity:1; }
+
+/* Upload form */
+.bpr-upload-form { max-width:600px; margin:20px auto; padding:20px; background:#fff; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.1); font-family:sans-serif; }
+.bpr-upload-form input, .bpr-upload-form textarea { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:12px; box-sizing:border-box; }
+.bpr-upload-form .button-primary { background:#0073aa; color:#fff; padding:10px 18px; border:none; border-radius:4px; cursor:pointer; }
+.bpr-upload-form .button-primary:hover { background:#005177; }
+
+/* Messages */
+.bpr-message { max-width:600px; margin:20px auto; padding:15px; border-radius:6px; font-weight:600; }
+.bpr-success { background:#dff0d8; color:#3c763d; }
+.bpr-error { background:#f2dede; color:#a94442; }
+
+/* Grid view */
+.bpr-grid-wrapper { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px; max-width:960px; margin:0 auto; }
+.bpr-grid-item { position:relative; padding-top:177.78%; overflow:hidden; background:#000; cursor:pointer; border-radius:8px; }
+.bpr-grid-item video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+
+/* Modal playback */
+.bpr-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); align-items:center; justify-content:center; z-index:10000; }
+.bpr-modal.active { display:flex; }
+.bpr-modal-content { position:relative; width:90%; max-width:600px; }
+.bpr-modal-content #bpr-full-video { width:100%; height:auto; max-height:85vh; }
+.bpr-close { position:absolute; top:10px; right:15px; font-size:28px; color:#fff; cursor:pointer; }
+.bpr-modal-user-info { display:flex; align-items:center; padding:8px; color:#fff; }
+.bpr-modal-user-info img { border-radius:50%; margin-right:8px; }
+
+/* Responsive grid */
+@media(max-width:768px){ .bpr-grid-wrapper{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:480px){ .bpr-grid-wrapper{grid-template-columns:1fr;} }
+
+
+
+
+
+
+
+
+
+
+
+#bpr-reel-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+}
+
+#bpr-reel-modal-content video {
+  max-height: 90%;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+#bpr-close-modal {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  font-size: 28px;
+  color: white;
+  cursor: pointer;
+  z-index: 10000;
+}
