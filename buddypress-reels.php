@@ -152,7 +152,7 @@ function bpr_handle_upload() {
             bp_core_get_userlink(get_current_user_id()) : 
             get_the_author_meta('display_name', get_current_user_id());
             
-        bp_activity_add([
+        $activity_id = bp_activity_add([
             'user_id'      => get_current_user_id(),
             'component'    => 'reels',
             'type'         => 'bpr_reel_upload',
@@ -162,6 +162,15 @@ function bpr_handle_upload() {
             'item_id'      => $post_id,
             'recorded_time'=> bp_core_current_time()
         ]);
+        
+        if ($activity_id) {
+            // Store the activity ID in post meta for future reference
+            update_post_meta($post_id, 'bp_activity_id', $activity_id);
+            
+            // Add custom meta to activity
+            bp_activity_update_meta($activity_id, 'reel_post_id', $post_id);
+            bp_activity_update_meta($activity_id, 'reel_video_id', $att_id);
+        }
     }
 
     wp_redirect(add_query_arg('bpr_msg', 'success', wp_get_referer()));
@@ -319,6 +328,29 @@ function bpr_reels_feed_shortcode($atts) {
                     </div>
                 </div>
                 
+                <?php if (function_exists('bp_is_active') && bp_is_active('activity')): 
+                    // Get BuddyPress activity for this reel
+                    $activity_id = get_post_meta($post_id, 'bp_activity_id', true);
+                    if ($activity_id) {
+                        $activity = new BP_Activity_Activity($activity_id);
+                        if ($activity->id) {
+                            $is_favorited = function_exists('bp_activity_is_favorite') ? bp_activity_is_favorite($activity_id, get_current_user_id()) : false;
+                            ?>
+                            <div class="bpr-bp-actions">
+                                <button class="bpr-bp-like-btn" data-activity-id="<?php echo esc_attr($activity_id); ?>" data-favorited="<?php echo $is_favorited ? 'true' : 'false'; ?>">
+                                    <span class="bpr-bp-icon"><?php echo $is_favorited ? '❤️' : '🤍'; ?></span>
+                                    <span class="bpr-bp-label"><?php echo $is_favorited ? __('Unlike', 'buddypress-reels') : __('Like', 'buddypress-reels'); ?></span>
+                                </button>
+                                <button class="bpr-bp-comment-btn" data-activity-id="<?php echo esc_attr($activity_id); ?>">
+                                    <span class="bpr-bp-icon">💬</span>
+                                    <span class="bpr-bp-label"><?php _e('Comment', 'buddypress-reels'); ?></span>
+                                </button>
+                            </div>
+                            <?php
+                        }
+                    }
+                endif; ?>
+                
                 <div class="bpr-pause-overlay">
                     <div class="bpr-pause-icon">⏸️</div>
                 </div>
@@ -373,20 +405,7 @@ function bpr_profile_feed_shortcode($atts) {
     ob_start();
     ?>
     <div class="bpr-profile-feed">
-        <div class="bpr-profile-header">
-            <div class="bpr-profile-stats">
-                <div class="bpr-stat">
-                    <span class="bpr-stat-number"><?php echo number_format($query->found_posts); ?></span>
-                    <span class="bpr-stat-label"><?php _e('Reels', 'buddypress-reels'); ?></span>
-                </div>
-                <?php
-                ?>
-                <div class="bpr-stat">
-                    <span class="bpr-stat-number"><?php echo date_i18n('M Y', strtotime(get_userdata($user_id)->user_registered)); ?></span>
-                    <span class="bpr-stat-label"><?php _e('Joined', 'buddypress-reels'); ?></span>
-                </div>
-            </div>
-        </div>
+
         
         <div class="bpr-feed-container">
             <?php while ($query->have_posts()): $query->the_post();
@@ -501,12 +520,6 @@ function bpr_reels_grid_shortcode($atts) {
     ob_start();
     ?>
     <div class="bpr-grid-container">
-        <div class="bpr-grid-header">
-            <div class="bpr-grid-stats">
-                <span class="bpr-stat-number"><?php echo number_format($query->found_posts); ?></span>
-                <span class="bpr-stat-label"><?php _e('Reels', 'buddypress-reels'); ?></span>
-            </div>
-        </div>
         
         <div class="bpr-grid-wrapper">
             <?php while ($query->have_posts()): $query->the_post();
@@ -536,6 +549,31 @@ function bpr_reels_grid_shortcode($atts) {
                             <?php if (get_the_title()): ?>
                                 <div class="bpr-grid-title"><?php echo esc_html(wp_trim_words(get_the_title(), 3)); ?></div>
                             <?php endif; ?>
+                            
+                            <?php if (function_exists('bp_is_active') && bp_is_active('activity')): 
+                                // Get BuddyPress activity for this reel
+                                $activity_id = get_post_meta($post_id, 'bp_activity_id', true);
+                                if ($activity_id) {
+                                    $activity = new BP_Activity_Activity($activity_id);
+                                    if ($activity->id) {
+                                        $like_count = bp_activity_get_meta($activity_id, 'favorite_count', true) ?: 0;
+                                        $comment_count = BP_Activity_Activity::get_child_comments($activity_id);
+                                        $comment_count = is_array($comment_count) ? count($comment_count) : 0;
+                                        ?>
+                                        <div class="bpr-grid-stats">
+                                            <span class="bpr-grid-stat">
+                                                <span class="bpr-grid-icon">❤️</span>
+                                                <span><?php echo number_format($like_count); ?></span>
+                                            </span>
+                                            <span class="bpr-grid-stat">
+                                                <span class="bpr-grid-icon">💬</span>
+                                                <span><?php echo number_format($comment_count); ?></span>
+                                            </span>
+                                        </div>
+                                        <?php
+                                    }
+                                }
+                            endif; ?>
                         </div>
                     </div>
                 </div>
@@ -555,11 +593,15 @@ function bpr_reels_grid_shortcode($atts) {
     return ob_get_clean();
 }
 
-// AJAX handlers for load more
+// AJAX handlers for load more and BuddyPress integration
 add_action('wp_ajax_bpr_load_more_profile_reels', 'bpr_handle_load_more_profile_reels');
 add_action('wp_ajax_nopriv_bpr_load_more_profile_reels', 'bpr_handle_load_more_profile_reels');
 add_action('wp_ajax_bpr_load_more_grid_reels', 'bpr_handle_load_more_grid_reels');
 add_action('wp_ajax_nopriv_bpr_load_more_grid_reels', 'bpr_handle_load_more_grid_reels');
+add_action('wp_ajax_bpr_bp_toggle_favorite', 'bpr_handle_bp_toggle_favorite');
+add_action('wp_ajax_nopriv_bpr_bp_toggle_favorite', 'bpr_handle_bp_toggle_favorite');
+add_action('wp_ajax_bpr_bp_add_comment', 'bpr_handle_bp_add_comment');
+add_action('wp_ajax_nopriv_bpr_bp_add_comment', 'bpr_handle_bp_add_comment');
 
 function bpr_handle_load_more_grid_reels() {
     check_ajax_referer('bpr_nonce', 'nonce');
@@ -729,6 +771,101 @@ function bpr_handle_load_more_profile_reels() {
         'html' => $reels_html,
         'has_more' => $page < $query->max_num_pages
     ]);
+}
+
+// Handle BuddyPress activity favorite toggle
+function bpr_handle_bp_toggle_favorite() {
+    check_ajax_referer('bpr_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(__('You must be logged in to like.', 'buddypress-reels'));
+    }
+    
+    $activity_id = intval($_POST['activity_id'] ?? 0);
+    $user_id = get_current_user_id();
+    
+    if (!$activity_id) {
+        wp_send_json_error(__('Invalid activity ID.', 'buddypress-reels'));
+    }
+    
+    if (!function_exists('bp_activity_add_user_favorite')) {
+        wp_send_json_error(__('BuddyPress activities not available.', 'buddypress-reels'));
+    }
+    
+    // Check if already favorited
+    $is_favorited = bp_activity_is_favorite($activity_id, $user_id);
+    
+    if ($is_favorited) {
+        // Remove favorite
+        $result = bp_activity_remove_user_favorite($activity_id, $user_id);
+        $action = 'removed';
+    } else {
+        // Add favorite
+        $result = bp_activity_add_user_favorite($activity_id, $user_id);
+        $action = 'added';
+    }
+    
+    if ($result) {
+        // Update favorite count
+        $favorite_count = bp_activity_get_meta($activity_id, 'favorite_count', true) ?: 0;
+        if ($action === 'added') {
+            $favorite_count++;
+        } else {
+            $favorite_count = max(0, $favorite_count - 1);
+        }
+        bp_activity_update_meta($activity_id, 'favorite_count', $favorite_count);
+        
+        wp_send_json_success([
+            'favorited' => !$is_favorited,
+            'count' => $favorite_count,
+            'action' => $action
+        ]);
+    } else {
+        wp_send_json_error(__('Failed to update favorite.', 'buddypress-reels'));
+    }
+}
+
+// Handle BuddyPress activity comment
+function bpr_handle_bp_add_comment() {
+    check_ajax_referer('bpr_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(__('You must be logged in to comment.', 'buddypress-reels'));
+    }
+    
+    $activity_id = intval($_POST['activity_id'] ?? 0);
+    $comment_content = sanitize_textarea_field($_POST['comment_content'] ?? '');
+    $user_id = get_current_user_id();
+    
+    if (!$activity_id || empty($comment_content)) {
+        wp_send_json_error(__('Activity ID and comment content are required.', 'buddypress-reels'));
+    }
+    
+    if (!function_exists('bp_activity_new_comment')) {
+        wp_send_json_error(__('BuddyPress activities not available.', 'buddypress-reels'));
+    }
+    
+    // Add the comment
+    $comment_id = bp_activity_new_comment([
+        'activity_id' => $activity_id,
+        'content' => $comment_content,
+        'user_id' => $user_id,
+        'parent_id' => false
+    ]);
+    
+    if ($comment_id) {
+        // Get updated comment count
+        $comment_count = BP_Activity_Activity::get_child_comments($activity_id);
+        $comment_count = is_array($comment_count) ? count($comment_count) : 0;
+        
+        wp_send_json_success([
+            'comment_id' => $comment_id,
+            'comment_count' => $comment_count,
+            'message' => __('Comment added successfully.', 'buddypress-reels')
+        ]);
+    } else {
+        wp_send_json_error(__('Failed to add comment.', 'buddypress-reels'));
+    }
 }
 
 // Add BuddyPress profile tab

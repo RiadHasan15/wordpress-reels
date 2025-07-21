@@ -777,36 +777,7 @@ body {
     padding: var(--bpr-space-lg);
 }
 
-.bpr-grid-header {
-    text-align: center;
-    margin-bottom: var(--bpr-space-2xl);
-    background: var(--bpr-glass);
-    backdrop-filter: var(--bpr-backdrop-blur);
-    border-radius: var(--bpr-radius-lg);
-    padding: var(--bpr-space-xl);
-    border: 1px solid var(--bpr-glass-border);
-}
 
-.bpr-grid-stats {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--bpr-space-sm);
-}
-
-.bpr-grid-stats .bpr-stat-number {
-    font-size: 28px;
-    font-weight: var(--bpr-font-weight-bold);
-    background: var(--bpr-gradient-primary);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.bpr-grid-stats .bpr-stat-label {
-    font-size: 16px;
-    color: var(--bpr-text-secondary);
-    font-weight: var(--bpr-font-weight-medium);
-}
 
 .bpr-grid-wrapper {
     display: grid;
@@ -892,7 +863,7 @@ body {
 
 .bpr-grid-title {
     position: absolute;
-    bottom: var(--bpr-space-md);
+    bottom: var(--bpr-space-2xl);
     left: var(--bpr-space-md);
     right: var(--bpr-space-md);
     color: var(--bpr-text-primary);
@@ -900,6 +871,29 @@ body {
     font-size: 14px;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
     line-height: 1.2;
+}
+
+.bpr-grid-stats {
+    position: absolute;
+    bottom: var(--bpr-space-md);
+    left: var(--bpr-space-md);
+    right: var(--bpr-space-md);
+    display: flex;
+    gap: var(--bpr-space-md);
+}
+
+.bpr-grid-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--bpr-space-xs);
+    color: var(--bpr-text-primary);
+    font-size: 12px;
+    font-weight: var(--bpr-font-weight-medium);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.bpr-grid-icon {
+    font-size: 14px;
 }
 
 .bpr-grid-load-more {
@@ -931,6 +925,73 @@ body {
 
 .bpr-load-more-grid:active {
     transform: translateY(0);
+}
+
+/* BuddyPress Actions Styles */
+.bpr-bp-actions {
+    position: absolute;
+    bottom: 100px;
+    right: var(--bpr-space-lg);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: var(--bpr-space-md);
+    animation: bpr-slide-up 1s ease-out 0.3s both;
+}
+
+.bpr-bp-like-btn,
+.bpr-bp-comment-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bpr-space-xs);
+    background: var(--bpr-glass);
+    border: none;
+    border-radius: var(--bpr-radius-lg);
+    padding: var(--bpr-space-md);
+    color: var(--bpr-text-primary);
+    cursor: pointer;
+    transition: var(--bpr-transition-bounce);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border: 1px solid var(--bpr-glass-border);
+    position: relative;
+    overflow: hidden;
+    min-width: 60px;
+    font-size: 14px;
+    font-weight: var(--bpr-font-weight-medium);
+}
+
+.bpr-bp-like-btn:hover,
+.bpr-bp-comment-btn:hover {
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: var(--bpr-shadow-lg);
+    background: var(--bpr-glass-hover);
+    border-color: var(--bpr-primary);
+}
+
+.bpr-bp-like-btn:active,
+.bpr-bp-comment-btn:active {
+    transform: translateY(-2px) scale(1.05);
+}
+
+.bpr-bp-like-btn[data-favorited="true"] {
+    background: rgba(255, 107, 107, 0.2);
+    border-color: var(--bpr-primary);
+}
+
+.bpr-bp-like-btn[data-favorited="true"]:hover {
+    background: rgba(255, 107, 107, 0.3);
+}
+
+.bpr-bp-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.bpr-bp-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Empty state styling */
@@ -978,15 +1039,6 @@ body {
     .bpr-grid-container {
         padding: var(--bpr-space-md);
     }
-    
-    .bpr-grid-header {
-        padding: var(--bpr-space-lg);
-        margin-bottom: var(--bpr-space-xl);
-    }
-    
-    .bpr-grid-stats .bpr-stat-number {
-        font-size: 24px;
-    }
 }
 
 @media (max-width: 480px) {
@@ -1007,22 +1059,24 @@ body {
     
     .bpr-grid-title {
         font-size: 12px;
-        bottom: var(--bpr-space-sm);
+        bottom: var(--bpr-space-xl);
         left: var(--bpr-space-sm);
         right: var(--bpr-space-sm);
     }
     
-    .bpr-grid-header {
-        padding: var(--bpr-space-md);
-        margin-bottom: var(--bpr-space-lg);
+    .bpr-grid-stats {
+        bottom: var(--bpr-space-sm);
+        left: var(--bpr-space-sm);
+        right: var(--bpr-space-sm);
+        gap: var(--bpr-space-sm);
     }
     
-    .bpr-grid-stats .bpr-stat-number {
-        font-size: 20px;
+    .bpr-grid-stat {
+        font-size: 11px;
     }
     
-    .bpr-grid-stats .bpr-stat-label {
-        font-size: 14px;
+    .bpr-grid-icon {
+        font-size: 12px;
     }
 }
 

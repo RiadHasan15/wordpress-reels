@@ -183,6 +183,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Grid functionality
     initializeGridFunctionality();
+    
+    // BuddyPress functionality
+    initializeBuddyPressFunctionality();
 
     function initializeGridFunctionality() {
         // Grid hover effects and video preview
@@ -326,4 +329,124 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.bpr-grid-item').forEach(item => {
         item.setAttribute('data-initialized', 'true');
     });
+
+    function initializeBuddyPressFunctionality() {
+        // Handle BuddyPress like buttons
+        document.querySelectorAll('.bpr-bp-like-btn').forEach(button => {
+            if (button.hasAttribute('data-bp-initialized')) return;
+            button.setAttribute('data-bp-initialized', 'true');
+            
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const activityId = this.dataset.activityId;
+                const isFavorited = this.dataset.favorited === 'true';
+                
+                if (!activityId) return;
+                
+                this.disabled = true;
+                
+                const formData = new FormData();
+                formData.append('action', 'bpr_bp_toggle_favorite');
+                formData.append('activity_id', activityId);
+                formData.append('nonce', bprSettings.nonce);
+                
+                fetch(bprSettings.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update button state
+                        this.dataset.favorited = data.data.favorited ? 'true' : 'false';
+                        const icon = this.querySelector('.bpr-bp-icon');
+                        const label = this.querySelector('.bpr-bp-label');
+                        
+                        if (data.data.favorited) {
+                            icon.textContent = '❤️';
+                            label.textContent = 'Unlike';
+                        } else {
+                            icon.textContent = '🤍';
+                            label.textContent = 'Like';
+                        }
+                        
+                        // Update grid stats if present
+                        const gridItem = this.closest('.bpr-grid-item');
+                        if (gridItem) {
+                            const statElement = gridItem.querySelector('.bpr-grid-stats .bpr-grid-stat:first-child span:last-child');
+                            if (statElement) {
+                                statElement.textContent = data.data.count.toLocaleString();
+                            }
+                        }
+                        
+                        this.disabled = false;
+                    } else {
+                        console.error('Failed to toggle favorite:', data.data);
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error toggling favorite:', error);
+                    this.disabled = false;
+                });
+            });
+        });
+        
+        // Handle BuddyPress comment buttons
+        document.querySelectorAll('.bpr-bp-comment-btn').forEach(button => {
+            if (button.hasAttribute('data-bp-initialized')) return;
+            button.setAttribute('data-bp-initialized', 'true');
+            
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const activityId = this.dataset.activityId;
+                if (!activityId) return;
+                
+                // Simple prompt for now - can be enhanced with a modal later
+                const comment = prompt('Enter your comment:');
+                if (!comment || comment.trim() === '') return;
+                
+                this.disabled = true;
+                
+                const formData = new FormData();
+                formData.append('action', 'bpr_bp_add_comment');
+                formData.append('activity_id', activityId);
+                formData.append('comment_content', comment.trim());
+                formData.append('nonce', bprSettings.nonce);
+                
+                fetch(bprSettings.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update grid stats if present
+                        const gridItem = this.closest('.bpr-grid-item');
+                        if (gridItem) {
+                            const statElement = gridItem.querySelector('.bpr-grid-stats .bpr-grid-stat:nth-child(2) span:last-child');
+                            if (statElement) {
+                                statElement.textContent = data.data.comment_count.toLocaleString();
+                            }
+                        }
+                        
+                        alert(data.data.message);
+                        this.disabled = false;
+                    } else {
+                        alert('Failed to add comment: ' + (data.data || 'Unknown error'));
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding comment:', error);
+                    alert('Error adding comment');
+                    this.disabled = false;
+                });
+            });
+        });
+    }
 });
