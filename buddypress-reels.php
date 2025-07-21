@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: BuddyPress Reels Enhanced
- * Description: Vertical video reels with optimized profile feed, stats display, and seamless BuddyPress integration.
+ * Description: TikTok-style reels with 3-column grid layout, modal playback, and integrated BuddyPress activity system.
  * Version: 3.0
  * Author: Riad Hasan
  * 
