@@ -240,6 +240,11 @@ function bpr_reels_feed_shortcode($atts) {
         'orderby' => 'date'
     ], $atts);
     
+    // Get plugin options
+    $opts = get_option('bpr_options', [
+        'default_muted' => '1'
+    ]);
+    
     $args = [
         'post_type'      => 'bpr_reel',
         'post_status'    => 'publish',
@@ -290,13 +295,16 @@ function bpr_reels_feed_shortcode($atts) {
                 get_author_posts_url($author_id);
             ?>
             <div class="bpr-video-wrapper" data-post-id="<?php echo esc_attr($post_id); ?>">
-                <video class="bpr-video" playsinline muted loop preload="metadata" data-views="<?php echo esc_attr($views); ?>">
+                <video class="bpr-video" playsinline <?php echo ($opts['default_muted'] === '1') ? 'muted' : ''; ?> loop preload="metadata" data-views="<?php echo esc_attr($views); ?>" tabindex="0" aria-label="<?php esc_attr_e('Video reel - Click to play/pause, double-click for fullscreen', 'buddypress-reels'); ?>">
                     <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
                     <?php _e('Your browser does not support the video tag.', 'buddypress-reels'); ?>
                 </video>
                 
+                <div class="bpr-play-icon"></div>
+                <div class="bpr-pause-icon"></div>
+                
                 <div class="bpr-controls">
-                    <div class="bpr-mute-toggle" data-user-muted="false" title="<?php esc_attr_e('Toggle sound', 'buddypress-reels'); ?>">🔇</div>
+                    <div class="bpr-mute-toggle" data-user-muted="false" title="<?php esc_attr_e('Toggle sound', 'buddypress-reels'); ?>"><?php echo ($opts['default_muted'] === '1') ? '🔇' : '🔊'; ?></div>
                 </div>
                 
                 <div class="bpr-overlay">
@@ -411,9 +419,14 @@ function bpr_reels_grid_shortcode($atts) {
     <div class="bpr-modal" id="bpr-modal">
         <div class="bpr-modal-content">
             <button class="bpr-close" aria-label="<?php esc_attr_e('Close', 'buddypress-reels'); ?>">&times;</button>
-            <video id="bpr-full-video" controls preload="metadata">
-                <?php _e('Your browser does not support the video tag.', 'buddypress-reels'); ?>
-            </video>
+            <div class="bpr-modal-video-wrapper">
+                <video id="bpr-full-video" controls preload="metadata">
+                    <?php _e('Your browser does not support the video tag.', 'buddypress-reels'); ?>
+                </video>
+                <div class="bpr-modal-controls">
+                    <div class="bpr-modal-mute-toggle" data-user-muted="false" title="<?php esc_attr_e('Toggle sound', 'buddypress-reels'); ?>"><?php echo ($opts['default_muted'] === '1') ? '🔇' : '🔊'; ?></div>
+                </div>
+            </div>
             <div class="bpr-modal-info">
                 <div class="bpr-modal-user-info">
                     <?php if (function_exists('bp_core_fetch_avatar')): ?>

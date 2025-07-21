@@ -256,6 +256,29 @@ body {
     box-shadow: var(--bpr-shadow-neon);
 }
 
+.bpr-video-wrapper.bpr-playing {
+    box-shadow: var(--bpr-shadow-xl);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.bpr-video-wrapper.bpr-playing .bpr-mute-toggle {
+    animation: bpr-float 3s ease-in-out infinite;
+}
+
+.bpr-video-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--bpr-text-secondary);
+    background: var(--bpr-glass);
+    padding: var(--bpr-space-lg);
+    border-radius: var(--bpr-radius-md);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border: 1px solid var(--bpr-glass-border);
+}
+
 .bpr-video {
     width: 100% !important;
     height: 100% !important;
@@ -323,6 +346,56 @@ body {
 
 .bpr-mute-toggle:active {
     transform: scale(0.95) rotate(-2deg);
+}
+
+/* Play/Pause Icons */
+.bpr-play-icon,
+.bpr-pause-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: var(--bpr-glass);
+    border-radius: var(--bpr-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: var(--bpr-text-primary);
+    opacity: 0;
+    transition: var(--bpr-transition-normal);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border: 2px solid var(--bpr-glass-border);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.bpr-play-icon.show,
+.bpr-pause-icon.show {
+    opacity: 1;
+    animation: bpr-icon-pulse 0.8s ease-out;
+}
+
+.bpr-play-icon::before {
+    content: '▶';
+    margin-left: 4px; /* Optical alignment for play triangle */
+}
+
+.bpr-pause-icon::before {
+    content: '⏸';
+}
+
+/* Enhanced Controls Positioning */
+.bpr-controls {
+    position: absolute;
+    bottom: var(--bpr-space-lg);
+    left: var(--bpr-space-lg);
+    z-index: 15;
+    display: flex;
+    gap: var(--bpr-space-md);
+    animation: bpr-slide-up 0.8s ease-out 0.3s both;
 }
 
 /* Premium Overlay with Advanced Gradients */
@@ -822,4 +895,235 @@ body {
 
 .bpr-grid-item:hover::before {
     opacity: 1;
+}
+
+/* Modal Styles */
+.bpr-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    animation: bpr-fade-in 0.3s ease-out;
+}
+
+.bpr-modal.active {
+    display: flex;
+}
+
+.bpr-modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 900px;
+    max-height: 95vh;
+    background: var(--bpr-dark-primary);
+    border-radius: var(--bpr-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--bpr-shadow-xl);
+    border: 1px solid var(--bpr-glass-border);
+}
+
+.bpr-modal-video-wrapper {
+    position: relative;
+    width: 100%;
+    background: #000;
+}
+
+.bpr-modal-content #bpr-full-video {
+    width: 100%;
+    height: auto;
+    max-height: 75vh;
+    display: block;
+}
+
+.bpr-modal-controls {
+    position: absolute;
+    top: var(--bpr-space-lg);
+    right: var(--bpr-space-lg);
+    z-index: 100;
+    display: flex;
+    gap: var(--bpr-space-md);
+}
+
+.bpr-modal-mute-toggle {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--bpr-text-primary);
+    background: var(--bpr-glass);
+    border-radius: var(--bpr-radius-full);
+    cursor: pointer;
+    transition: var(--bpr-transition-bounce);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border: 1px solid var(--bpr-glass-border);
+    position: relative;
+    overflow: hidden;
+}
+
+.bpr-modal-mute-toggle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.bpr-modal-mute-toggle:hover {
+    background: var(--bpr-glass-hover);
+    transform: scale(1.15) rotate(5deg);
+    box-shadow: var(--bpr-shadow-lg);
+}
+
+.bpr-modal-mute-toggle:hover::before {
+    left: 100%;
+}
+
+.bpr-modal-mute-toggle:active {
+    transform: scale(0.95) rotate(-2deg);
+}
+
+.bpr-close {
+    position: absolute;
+    top: var(--bpr-space-lg);
+    right: var(--bpr-space-lg);
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--bpr-text-primary);
+    border: none;
+    border-radius: var(--bpr-radius-full);
+    cursor: pointer;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--bpr-transition-normal);
+    z-index: 101;
+    backdrop-filter: blur(10px);
+}
+
+.bpr-close:hover {
+    background: rgba(238, 96, 85, 0.8);
+    transform: scale(1.1) rotate(90deg);
+}
+
+.bpr-close:active {
+    transform: scale(0.95) rotate(45deg);
+}
+
+.bpr-modal-info {
+    padding: var(--bpr-space-lg) var(--bpr-space-xl);
+    background: var(--bpr-glass);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border-top: 1px solid var(--bpr-glass-border);
+}
+
+.bpr-modal-user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--bpr-space-md);
+    margin-bottom: var(--bpr-space-md);
+}
+
+.bpr-modal-user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--bpr-radius-full);
+    border: 2px solid var(--bpr-glass-border);
+}
+
+.bpr-modal-user-info a {
+    color: var(--bpr-text-primary);
+    text-decoration: none;
+    font-weight: var(--bpr-font-weight-semibold);
+    transition: var(--bpr-transition-normal);
+}
+
+.bpr-modal-user-info a:hover {
+    color: var(--bpr-primary);
+}
+
+.bpr-modal-content-info {
+    color: var(--bpr-text-secondary);
+}
+
+.bpr-modal-title {
+    font-size: 18px;
+    font-weight: var(--bpr-font-weight-bold);
+    color: var(--bpr-text-primary);
+    margin: 0 0 var(--bpr-space-sm) 0;
+}
+
+.bpr-modal-description {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--bpr-text-secondary);
+}
+
+/* Mobile Modal Responsive */
+@media (max-width: 768px) {
+    .bpr-modal-content {
+        width: 98%;
+        margin: var(--bpr-space-md);
+    }
+    
+    .bpr-modal-controls {
+        top: var(--bpr-space-md);
+        right: var(--bpr-space-md);
+    }
+    
+    .bpr-modal-mute-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .bpr-close {
+        top: var(--bpr-space-md);
+        right: var(--bpr-space-md);
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+    
+    .bpr-modal-info {
+        padding: var(--bpr-space-md);
+    }
+}
+
+/* Improved Animation */
+@keyframes bpr-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes bpr-icon-pulse {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
