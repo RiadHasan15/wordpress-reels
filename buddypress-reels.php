@@ -545,7 +545,6 @@ function bpr_reels_grid_shortcode($atts) {
                         </video>
                         
                         <div class="bpr-grid-overlay">
-                            <div class="bpr-play-icon">▶</div>
                             <?php if (get_the_title()): ?>
                                 <div class="bpr-grid-title"><?php echo esc_html(wp_trim_words(get_the_title(), 3)); ?></div>
                             <?php endif; ?>
@@ -661,7 +660,6 @@ function bpr_handle_load_more_grid_reels() {
                 </video>
                 
                 <div class="bpr-grid-overlay">
-                    <div class="bpr-play-icon">▶</div>
                     <?php if (get_the_title()): ?>
                         <div class="bpr-grid-title"><?php echo esc_html(wp_trim_words(get_the_title(), 3)); ?></div>
                     <?php endif; ?>

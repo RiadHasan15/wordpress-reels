@@ -827,39 +827,15 @@ body {
     right: 0;
     bottom: 0;
     background: linear-gradient(transparent 60%, rgba(0, 0, 0, 0.8));
-    display: flex;
-    align-items: center;
-    justify-content: center;
     opacity: 0;
     transition: var(--bpr-transition-normal);
-    flex-direction: column;
-    gap: var(--bpr-space-md);
 }
 
 .bpr-grid-item:hover .bpr-grid-overlay {
     opacity: 1;
 }
 
-.bpr-play-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--bpr-glass);
-    backdrop-filter: var(--bpr-backdrop-blur);
-    border-radius: var(--bpr-radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    color: var(--bpr-text-primary);
-    border: 2px solid var(--bpr-glass-border);
-    transition: var(--bpr-transition-bounce);
-}
 
-.bpr-grid-item:hover .bpr-play-icon {
-    transform: scale(1.1);
-    background: var(--bpr-primary);
-    border-color: var(--bpr-primary);
-}
 
 .bpr-grid-title {
     position: absolute;
@@ -1051,11 +1027,7 @@ body {
         padding: var(--bpr-space-sm);
     }
     
-    .bpr-play-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 18px;
-    }
+
     
     .bpr-grid-title {
         font-size: 12px;
@@ -1087,40 +1059,7 @@ body {
     padding: var(--bpr-space-lg);
 }
 
-.bpr-profile-header {
-    background: var(--bpr-glass-bg);
-    border: 1px solid var(--bpr-glass-border);
-    border-radius: var(--bpr-radius-lg);
-    padding: var(--bpr-space-xl);
-    margin-bottom: var(--bpr-space-xl);
-    backdrop-filter: blur(10px);
-}
 
-.bpr-profile-stats {
-    display: flex;
-    gap: var(--bpr-space-xl);
-    justify-content: center;
-}
-
-.bpr-stat {
-    text-align: center;
-    flex: 1;
-}
-
-.bpr-stat-number {
-    display: block;
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--bpr-accent);
-    margin-bottom: var(--bpr-space-xs);
-}
-
-.bpr-stat-label {
-    display: block;
-    font-size: 0.875rem;
-    color: var(--bpr-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .bpr-feed-container {
@@ -1238,17 +1177,7 @@ body {
         padding: var(--bpr-space-md);
     }
     
-    .bpr-profile-header {
-        padding: var(--bpr-space-lg);
-    }
-    
-    .bpr-profile-stats {
-        gap: var(--bpr-space-lg);
-    }
-    
-    .bpr-stat-number {
-        font-size: 1.5rem;
-    }
+
     
     .bpr-reel-content {
         padding: var(--bpr-space-md);
