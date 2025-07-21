@@ -403,16 +403,22 @@ function bpr_profile_grid_shortcode($atts) {
                 <div class="bpr-grid-item" 
                      data-post-id="<?php echo esc_attr($post_id); ?>"
                      data-video="<?php echo esc_attr($video_url); ?>"
-                     data-title="<?php echo esc_attr(get_the_title()); ?>"
-                     data-description="<?php echo esc_attr(get_the_content()); ?>"
-                     data-author="<?php echo esc_attr($user_id); ?>">
+                     data-title="<?php echo esc_attr(wp_strip_all_tags(get_the_title())); ?>"
+                     data-description="<?php echo esc_attr(wp_strip_all_tags(get_the_content())); ?>"
+                     data-author-id="<?php echo esc_attr($user_id); ?>"
+                     data-author-name="<?php echo esc_attr(get_the_author_meta('display_name', get_post_field('post_author', $post_id))); ?>"
+                     data-author-url="<?php echo esc_attr(function_exists('bp_core_get_user_domain') ? bp_core_get_user_domain(get_post_field('post_author', $post_id)) : get_author_posts_url(get_post_field('post_author', $post_id))); ?>">
                     
                     <div class="bpr-grid-thumb">
-                        <video muted loop preload="metadata" poster="<?php echo esc_url($thumbnail); ?>">
+                        <video muted loop preload="metadata" poster="<?php echo esc_url($thumbnail ?: ''); ?>" playsinline>
                             <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
+                            <p><?php _e('Your browser does not support the video tag.', 'buddypress-reels'); ?></p>
                         </video>
                         <div class="bpr-play-overlay">
                             <div class="bpr-play-btn">▶</div>
+                        </div>
+                        <div class="bpr-loading-overlay" style="display: none;">
+                            <div class="bpr-loading-spinner"></div>
                         </div>
                     </div>
                 </div>
@@ -436,15 +442,13 @@ function bpr_profile_grid_shortcode($atts) {
             <div class="bpr-modal-sidebar">
                 <div class="bpr-modal-info">
                     <div class="bpr-modal-author">
-                        <?php if (function_exists('bp_core_fetch_avatar')): ?>
-                            <div class="bpr-author-avatar">
-                                <?php echo bp_core_fetch_avatar(['item_id' => $user_id, 'html' => true, 'width' => 40, 'height' => 40]); ?>
-                            </div>
-                        <?php endif; ?>
+                        <div class="bpr-author-avatar">
+                            <!-- Dynamic avatar will be loaded here -->
+                        </div>
                         <div class="bpr-author-info">
                             <h4 class="bpr-author-name">
-                                <a href="<?php echo esc_url(function_exists('bp_core_get_user_domain') ? bp_core_get_user_domain($user_id) : get_author_posts_url($user_id)); ?>">
-                                    <?php echo esc_html(get_the_author_meta('display_name', $user_id)); ?>
+                                <a href="#" target="_blank">
+                                    <!-- Dynamic author name will be loaded here -->
                                 </a>
                             </h4>
                         </div>
@@ -512,20 +516,20 @@ function bpr_handle_get_reel_activity() {
 // Hook into BuddyPress to create activity when reel is posted
 add_action('save_post_bpr_reel', 'bpr_create_reel_activity', 10, 2);
 function bpr_create_reel_activity($post_id, $post) {
-    if (!function_exists('bp_is_active') || !bp_is_active('activity')) {
+    // Safety checks
+    if (!$post_id || !$post || !function_exists('bp_is_active') || !bp_is_active('activity')) {
         return;
     }
     
-    if ($post->post_status !== 'publish' || wp_is_post_revision($post_id)) {
+    if ($post->post_status !== 'publish' || wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
         return;
     }
     
-    // Check if activity already exists
+    // Check if activity already exists to prevent duplicates
     $existing_activity = bp_activity_get([
         'filter' => [
             'object' => 'bpr_reel',
-            'primary_id' => $post_id,
-            'action' => 'created_reel'
+            'primary_id' => $post_id
         ],
         'per_page' => 1
     ]);
@@ -534,16 +538,28 @@ function bpr_create_reel_activity($post_id, $post) {
         return; // Activity already exists
     }
     
+    // Verify video exists
     $video_id = get_post_meta($post_id, 'bpr_video', true);
-    $video_url = wp_get_attachment_url($video_id);
+    if (!$video_id) {
+        return;
+    }
     
+    $video_url = wp_get_attachment_url($video_id);
     if (!$video_url) {
         return;
     }
     
-    $user_id = $post->post_author;
+    $user_id = intval($post->post_author);
+    if (!$user_id) {
+        return;
+    }
+    
     $user_link = function_exists('bp_core_get_user_domain') ? bp_core_get_user_domain($user_id) : get_author_posts_url($user_id);
     $user_name = get_the_author_meta('display_name', $user_id);
+    
+    if (!$user_name) {
+        $user_name = __('Unknown User', 'buddypress-reels');
+    }
     
     $action = sprintf(
         __('%s posted a new reel', 'buddypress-reels'),
@@ -551,22 +567,37 @@ function bpr_create_reel_activity($post_id, $post) {
     );
     
     $content = '';
-    if ($post->post_title) {
+    if (!empty($post->post_title)) {
         $content .= '<h4>' . esc_html($post->post_title) . '</h4>';
     }
-    if ($post->post_content) {
-        $content .= '<p>' . esc_html($post->post_content) . '</p>';
+    if (!empty($post->post_content)) {
+        $content .= '<p>' . esc_html(wp_trim_words($post->post_content, 50)) . '</p>';
     }
     
-    bp_activity_add([
+    // Add video preview to activity content
+    $content .= '<div class="bpr-activity-video-preview">';
+    $content .= '<a href="' . esc_url(get_permalink($post_id)) . '" class="bpr-reel-link">';
+    $content .= '<video width="200" height="356" poster="" muted>';
+    $content .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
+    $content .= '</video>';
+    $content .= '</a>';
+    $content .= '</div>';
+    
+    $activity_id = bp_activity_add([
         'action' => $action,
         'content' => $content,
         'component' => 'bpr_reel',
         'type' => 'created_reel',
         'user_id' => $user_id,
         'item_id' => $post_id,
-        'recorded_time' => bp_core_current_time()
+        'recorded_time' => bp_core_current_time(),
+        'hide_sitewide' => false
     ]);
+    
+    // Log for debugging
+    if (!$activity_id) {
+        error_log('BuddyPress Reels: Failed to create activity for reel ' . $post_id);
+    }
 }
 
 // Add BuddyPress profile tab

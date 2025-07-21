@@ -93,16 +93,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Grid item click handlers
     document.querySelectorAll('.bpr-grid-item').forEach(item => {
+        const video = item.querySelector('video');
+        const loadingOverlay = item.querySelector('.bpr-loading-overlay');
+        
+        // Handle video loading states
+        if (video) {
+            video.addEventListener('loadstart', function() {
+                if (loadingOverlay) loadingOverlay.style.display = 'flex';
+            });
+            
+            video.addEventListener('loadeddata', function() {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+            });
+            
+            video.addEventListener('error', function() {
+                if (loadingOverlay) {
+                    loadingOverlay.innerHTML = '<div style="color: white; text-align: center;">⚠️<br>Failed to load</div>';
+                }
+                console.error('Video failed to load:', this.src);
+            });
+        }
+        
         // Preview on hover
         item.addEventListener('mouseenter', function() {
-            const video = this.querySelector('video');
-            if (video) {
+            if (video && video.readyState >= 2) { // HAVE_CURRENT_DATA
                 video.play().catch(() => {});
             }
         });
 
         item.addEventListener('mouseleave', function() {
-            const video = this.querySelector('video');
             if (video) {
                 video.pause();
                 video.currentTime = 0;
@@ -115,14 +134,50 @@ document.addEventListener('DOMContentLoaded', function () {
             const title = this.dataset.title;
             const description = this.dataset.description;
             const postId = this.dataset.postId;
+            const authorName = this.dataset.authorName;
+            const authorUrl = this.dataset.authorUrl;
+            const authorId = this.dataset.authorId;
 
             if (modal && modalVideo) {
+                // Reset modal state
+                modalVideo.pause();
+                modalVideo.currentTime = 0;
+                modalVideo.src = '';
+                
+                // Update modal content
                 modalVideo.src = videoUrl;
                 modalTitle.textContent = title || '';
                 modalDescription.textContent = description || '';
                 
+                // Update author info
+                const authorLink = document.querySelector('.bpr-author-name a');
+                const authorAvatar = document.querySelector('.bpr-author-avatar');
+                
+                if (authorLink) {
+                    authorLink.textContent = authorName || 'Unknown User';
+                    authorLink.href = authorUrl || '#';
+                }
+                
+                // Load avatar if BuddyPress is available
+                if (authorAvatar && authorId) {
+                    authorAvatar.innerHTML = `<img src="${getGravatarUrl(authorId)}" alt="${authorName}" class="avatar" width="40" height="40" style="border-radius: 50%; border: 2px solid var(--bpr-accent);">`;
+                }
+                
                 modal.classList.add('active');
-                modalVideo.play().catch(() => {});
+                
+                // Handle modal video loading
+                modalVideo.addEventListener('loadeddata', function() {
+                    this.play().catch(error => {
+                        console.error('Modal video play failed:', error);
+                    });
+                }, { once: true });
+                
+                modalVideo.addEventListener('error', function() {
+                    console.error('Modal video failed to load:', this.src);
+                    if (modalDescription) {
+                        modalDescription.innerHTML = '<div class="error">Video failed to load</div>';
+                    }
+                }, { once: true });
                 
                 // Load BuddyPress activity
                 loadReelActivity(postId);
@@ -154,31 +209,47 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function getGravatarUrl(userId, size = 40) {
+        // Simple gravatar URL generation - in real implementation, you'd get the email
+        return `https://www.gravatar.com/avatar/${userId}?s=${size}&d=mp&r=g`;
+    }
+
     function loadReelActivity(postId) {
         if (!activityStream) return;
         
         activityStream.innerHTML = '<div class="loading">Loading activity...</div>';
         
+        // Check if bprSettings is available
+        if (typeof bprSettings === 'undefined') {
+            activityStream.innerHTML = '<div class="error">Configuration error</div>';
+            return;
+        }
+        
         const formData = new FormData();
         formData.append('action', 'bpr_get_reel_activity');
         formData.append('post_id', postId);
-        formData.append('nonce', bpr_ajax.nonce);
+        formData.append('nonce', bprSettings.nonce);
         
-        fetch(bpr_ajax.url, {
+        fetch(bprSettings.ajax_url, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 activityStream.innerHTML = data.data.html;
             } else {
-                activityStream.innerHTML = '<div class="error">Failed to load activity</div>';
+                activityStream.innerHTML = '<div class="error">Failed to load activity: ' + (data.data || 'Unknown error') + '</div>';
             }
         })
         .catch(error => {
             console.error('Error loading activity:', error);
-            activityStream.innerHTML = '<div class="error">Error loading activity</div>';
+            activityStream.innerHTML = '<div class="error">Error loading activity. Please try again.</div>';
         });
     }
 });
