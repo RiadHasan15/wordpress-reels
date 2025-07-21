@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     videos.forEach(video => {
         observer.observe(video);
+        video.setAttribute('data-observer-added', 'true');
 
         // Pause/Play on click
         video.addEventListener('click', function () {
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Mute toggle button
     document.querySelectorAll('.bpr-mute-toggle').forEach(button => {
         button.dataset.userMuted = 'false'; // Set default
+        button.dataset.listenerAdded = 'true'; // Mark as processed
         button.addEventListener('click', function () {
             const video = this.closest('.bpr-video-wrapper').querySelector('video');
             if (video) {
@@ -80,14 +82,102 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Modal close
-    const closeBtn = document.querySelector('.bpr-close');
-    const modal = document.querySelector('.bpr-modal');
-    const fullVideo = document.getElementById('bpr-full-video');
-    if (closeBtn && modal && fullVideo) {
-        closeBtn.addEventListener('click', function () {
-            modal.classList.remove('active');
-            fullVideo.pause();
+    // Load more functionality for profile feed
+    const loadMoreBtn = document.querySelector('.bpr-load-more');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const currentPage = parseInt(this.dataset.page);
+            const maxPages = parseInt(this.dataset.maxPages);
+            const userId = this.dataset.userId;
+            
+            if (currentPage >= maxPages) return;
+            
+            this.disabled = true;
+            this.textContent = 'Loading...';
+            
+            // Make AJAX request
+            const formData = new FormData();
+            formData.append('action', 'bpr_load_more_profile_reels');
+            formData.append('user_id', userId);
+            formData.append('page', currentPage + 1);
+            formData.append('posts_per_page', 10);
+            formData.append('nonce', bpr_ajax.nonce);
+            
+            fetch(bpr_ajax.url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Append new reels to the feed container
+                    const feedContainer = document.querySelector('.bpr-feed-container');
+                    if (feedContainer) {
+                        feedContainer.insertAdjacentHTML('beforeend', data.data.html);
+                        
+                        // Initialize video observers for new videos
+                        const newVideos = feedContainer.querySelectorAll('.bpr-video:not([data-observer-added])');
+                        newVideos.forEach(video => {
+                            observer.observe(video);
+                            video.setAttribute('data-observer-added', 'true');
+                            
+                            // Add click event for new videos
+                            video.addEventListener('click', function () {
+                                const icon = this.parentElement.querySelector('.bpr-play-icon, .bpr-pause-icon');
+                                if (video.paused) {
+                                    video.play();
+                                    icon?.classList.remove('show');
+                                } else {
+                                    video.pause();
+                                    icon?.classList.add('show');
+                                    setTimeout(() => {
+                                        icon?.classList.remove('show');
+                                    }, 800);
+                                }
+                            });
+                        });
+                        
+                        // Initialize mute buttons for new videos
+                        const newMuteButtons = feedContainer.querySelectorAll('.bpr-mute-toggle:not([data-listener-added])');
+                        newMuteButtons.forEach(button => {
+                            button.dataset.userMuted = 'false';
+                            button.dataset.listenerAdded = 'true';
+                            button.addEventListener('click', function () {
+                                const video = this.closest('.bpr-video-wrapper').querySelector('video');
+                                if (video) {
+                                    video.muted = !video.muted;
+                                    this.textContent = video.muted ? '🔇' : '🔊';
+                                    this.dataset.userMuted = video.muted ? 'true' : 'false';
+                                }
+                            });
+                        });
+                    }
+                    
+                    this.dataset.page = currentPage + 1;
+                    
+                    if (!data.data.has_more) {
+                        this.textContent = 'All reels loaded';
+                        this.disabled = true;
+                    } else {
+                        this.textContent = 'Load More Reels';
+                        this.disabled = false;
+                    }
+                } else {
+                    this.textContent = 'Error loading reels';
+                    setTimeout(() => {
+                        this.textContent = 'Load More Reels';
+                        this.disabled = false;
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.textContent = 'Error loading reels';
+                setTimeout(() => {
+                    this.textContent = 'Load More Reels';
+                    this.disabled = false;
+                }, 2000);
+            });
         });
     }
 });
