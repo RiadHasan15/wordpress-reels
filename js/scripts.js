@@ -180,4 +180,150 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    // Grid functionality
+    initializeGridFunctionality();
+
+    function initializeGridFunctionality() {
+        // Grid hover effects and video preview
+        document.querySelectorAll('.bpr-grid-item').forEach(item => {
+            const video = item.querySelector('.bpr-grid-video');
+            
+            if (!video) return;
+            
+            let hoverTimeout;
+            
+            item.addEventListener('mouseenter', function() {
+                hoverTimeout = setTimeout(() => {
+                    if (video.paused) {
+                        video.play().catch(() => {});
+                    }
+                }, 300); // Delay to prevent accidental triggers
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                clearTimeout(hoverTimeout);
+                if (!video.paused) {
+                    video.pause();
+                    video.currentTime = 0; // Reset to beginning
+                }
+            });
+            
+            // Click to open video in modal/overlay (optional - can be expanded)
+            item.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                if (postId) {
+                    // For now, just play/pause the video
+                    // In the future, this could open a full-screen modal
+                    if (video.paused) {
+                        video.play().catch(() => {});
+                    } else {
+                        video.pause();
+                    }
+                }
+            });
+        });
+
+        // Grid load more functionality
+        const gridLoadMoreBtn = document.querySelector('.bpr-load-more-grid');
+        if (gridLoadMoreBtn) {
+            gridLoadMoreBtn.addEventListener('click', function() {
+                const currentPage = parseInt(this.dataset.page);
+                const maxPages = parseInt(this.dataset.maxPages);
+                const userId = this.dataset.userId;
+                
+                if (currentPage >= maxPages) return;
+                
+                this.disabled = true;
+                this.textContent = 'Loading...';
+                
+                // Make AJAX request
+                const formData = new FormData();
+                formData.append('action', 'bpr_load_more_grid_reels');
+                formData.append('user_id', userId);
+                formData.append('page', currentPage + 1);
+                formData.append('posts_per_page', 12);
+                formData.append('nonce', bprSettings.nonce);
+                
+                fetch(bprSettings.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Append new grid items
+                        const gridWrapper = document.querySelector('.bpr-grid-wrapper');
+                        if (gridWrapper) {
+                            gridWrapper.insertAdjacentHTML('beforeend', data.data.html);
+                            
+                            // Initialize grid functionality for new items
+                            const newItems = gridWrapper.querySelectorAll('.bpr-grid-item:not([data-initialized])');
+                            newItems.forEach(item => {
+                                item.setAttribute('data-initialized', 'true');
+                                const video = item.querySelector('.bpr-grid-video');
+                                
+                                if (!video) return;
+                                
+                                let hoverTimeout;
+                                
+                                item.addEventListener('mouseenter', function() {
+                                    hoverTimeout = setTimeout(() => {
+                                        if (video.paused) {
+                                            video.play().catch(() => {});
+                                        }
+                                    }, 300);
+                                });
+                                
+                                item.addEventListener('mouseleave', function() {
+                                    clearTimeout(hoverTimeout);
+                                    if (!video.paused) {
+                                        video.pause();
+                                        video.currentTime = 0;
+                                    }
+                                });
+                                
+                                item.addEventListener('click', function() {
+                                    if (video.paused) {
+                                        video.play().catch(() => {});
+                                    } else {
+                                        video.pause();
+                                    }
+                                });
+                            });
+                        }
+                        
+                        this.dataset.page = currentPage + 1;
+                        
+                        if (!data.data.has_more) {
+                            this.textContent = 'All reels loaded';
+                            this.disabled = true;
+                        } else {
+                            this.textContent = 'Load More Reels';
+                            this.disabled = false;
+                        }
+                    } else {
+                        this.textContent = 'Error loading reels';
+                        setTimeout(() => {
+                            this.textContent = 'Load More Reels';
+                            this.disabled = false;
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.textContent = 'Error loading reels';
+                    setTimeout(() => {
+                        this.textContent = 'Load More Reels';
+                        this.disabled = false;
+                    }, 2000);
+                });
+            });
+        }
+    }
+
+    // Mark existing grid items as initialized
+    document.querySelectorAll('.bpr-grid-item').forEach(item => {
+        item.setAttribute('data-initialized', 'true');
+    });
 });
