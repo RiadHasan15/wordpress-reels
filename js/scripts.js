@@ -178,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.disabled = false;
                 }, 2000);
             });
+<<<<<<< HEAD
         });
     }
 
@@ -447,6 +448,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.disabled = false;
                 });
             });
+=======
+>>>>>>> a3d262c (Refactor profile feed with enhanced stats, pagination, and mobile optimization)
         });
     }
 });
