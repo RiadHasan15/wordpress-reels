@@ -770,6 +770,262 @@ body {
     animation: bpr-slide-up 0.8s ease-out;
 }
 
+/* TikTok-Style Grid Styles */
+.bpr-grid-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--bpr-space-lg);
+}
+
+.bpr-grid-header {
+    text-align: center;
+    margin-bottom: var(--bpr-space-2xl);
+    background: var(--bpr-glass);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border-radius: var(--bpr-radius-lg);
+    padding: var(--bpr-space-xl);
+    border: 1px solid var(--bpr-glass-border);
+}
+
+.bpr-grid-stats {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bpr-space-sm);
+}
+
+.bpr-grid-stats .bpr-stat-number {
+    font-size: 28px;
+    font-weight: var(--bpr-font-weight-bold);
+    background: var(--bpr-gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.bpr-grid-stats .bpr-stat-label {
+    font-size: 16px;
+    color: var(--bpr-text-secondary);
+    font-weight: var(--bpr-font-weight-medium);
+}
+
+.bpr-grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--bpr-space-md);
+    margin-bottom: var(--bpr-space-2xl);
+}
+
+.bpr-grid-item {
+    position: relative;
+    aspect-ratio: 9/16;
+    border-radius: var(--bpr-radius-lg);
+    overflow: hidden;
+    background: var(--bpr-dark);
+    cursor: pointer;
+    transition: var(--bpr-transition-normal);
+    border: 2px solid transparent;
+}
+
+.bpr-grid-item:hover {
+    transform: scale(1.02);
+    border-color: var(--bpr-primary);
+    box-shadow: var(--bpr-shadow-lg);
+}
+
+.bpr-grid-video-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.bpr-grid-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--bpr-transition-normal);
+}
+
+.bpr-grid-item:hover .bpr-grid-video {
+    transform: scale(1.05);
+}
+
+.bpr-grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(transparent 60%, rgba(0, 0, 0, 0.8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--bpr-transition-normal);
+    flex-direction: column;
+    gap: var(--bpr-space-md);
+}
+
+.bpr-grid-item:hover .bpr-grid-overlay {
+    opacity: 1;
+}
+
+.bpr-play-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--bpr-glass);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border-radius: var(--bpr-radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--bpr-text-primary);
+    border: 2px solid var(--bpr-glass-border);
+    transition: var(--bpr-transition-bounce);
+}
+
+.bpr-grid-item:hover .bpr-play-icon {
+    transform: scale(1.1);
+    background: var(--bpr-primary);
+    border-color: var(--bpr-primary);
+}
+
+.bpr-grid-title {
+    position: absolute;
+    bottom: var(--bpr-space-md);
+    left: var(--bpr-space-md);
+    right: var(--bpr-space-md);
+    color: var(--bpr-text-primary);
+    font-weight: var(--bpr-font-weight-semibold);
+    font-size: 14px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    line-height: 1.2;
+}
+
+.bpr-grid-load-more {
+    text-align: center;
+    margin-top: var(--bpr-space-2xl);
+}
+
+.bpr-load-more-grid {
+    background: var(--bpr-glass);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border: 2px solid var(--bpr-glass-border);
+    border-radius: var(--bpr-radius-lg);
+    padding: var(--bpr-space-lg) var(--bpr-space-2xl);
+    color: var(--bpr-text-primary);
+    font-weight: var(--bpr-font-weight-semibold);
+    font-size: 16px;
+    cursor: pointer;
+    transition: var(--bpr-transition-bounce);
+    position: relative;
+    overflow: hidden;
+}
+
+.bpr-load-more-grid:hover {
+    transform: translateY(-2px);
+    border-color: var(--bpr-primary);
+    background: var(--bpr-glass-hover);
+    box-shadow: var(--bpr-shadow-lg);
+}
+
+.bpr-load-more-grid:active {
+    transform: translateY(0);
+}
+
+/* Empty state styling */
+.bpr-empty-state {
+    text-align: center;
+    padding: var(--bpr-space-3xl);
+    background: var(--bpr-glass);
+    backdrop-filter: var(--bpr-backdrop-blur);
+    border-radius: var(--bpr-radius-lg);
+    border: 1px solid var(--bpr-glass-border);
+}
+
+.bpr-empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--bpr-space-lg);
+    opacity: 0.7;
+}
+
+.bpr-empty-state h3 {
+    color: var(--bpr-text-primary);
+    font-weight: var(--bpr-font-weight-bold);
+    margin-bottom: var(--bpr-space-md);
+    font-size: 1.5rem;
+}
+
+.bpr-empty-state p {
+    color: var(--bpr-text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Responsive Grid */
+@media (max-width: 1024px) {
+    .bpr-grid-container {
+        max-width: 900px;
+    }
+}
+
+@media (max-width: 768px) {
+    .bpr-grid-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--bpr-space-sm);
+    }
+    
+    .bpr-grid-container {
+        padding: var(--bpr-space-md);
+    }
+    
+    .bpr-grid-header {
+        padding: var(--bpr-space-lg);
+        margin-bottom: var(--bpr-space-xl);
+    }
+    
+    .bpr-grid-stats .bpr-stat-number {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bpr-grid-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--bpr-space-xs);
+    }
+    
+    .bpr-grid-container {
+        padding: var(--bpr-space-sm);
+    }
+    
+    .bpr-play-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+    }
+    
+    .bpr-grid-title {
+        font-size: 12px;
+        bottom: var(--bpr-space-sm);
+        left: var(--bpr-space-sm);
+        right: var(--bpr-space-sm);
+    }
+    
+    .bpr-grid-header {
+        padding: var(--bpr-space-md);
+        margin-bottom: var(--bpr-space-lg);
+    }
+    
+    .bpr-grid-stats .bpr-stat-number {
+        font-size: 20px;
+    }
+    
+    .bpr-grid-stats .bpr-stat-label {
+        font-size: 14px;
+    }
+}
+
 /* Profile Feed Styles */
 .bpr-profile-feed {
     max-width: 600px;
