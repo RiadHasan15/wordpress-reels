@@ -657,25 +657,7 @@ function bpr_modern_grid_shortcode($atts) {
         <?php endif; ?>
     </div>
     
-    <!-- Enhanced Modal -->
-    <div class="bpr-grid-modal" id="bpr-grid-modal">
-        <div class="bpr-modal-backdrop"></div>
-        <div class="bpr-modal-container">
-            <div class="bpr-modal-header">
-                <button class="bpr-modal-close" aria-label="<?php esc_attr_e('Close', 'buddypress-reels'); ?>">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
-                    </svg>
-                </button>
-            </div>
-            
-            <div class="bpr-modal-body">
-                <div class="bpr-modal-video-container">
-                    <video class="bpr-modal-video" 
-                           controls 
-                           preload="metadata"
-                           <?php echo ($opts['default_muted'] === '1') ? 'muted' : ''; ?>>
-                    </video>
+
                     
                     <div class="bpr-modal-video-overlay">
                         <div class="bpr-modal-mute-toggle" data-user-muted="false">
