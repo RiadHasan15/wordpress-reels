@@ -169,6 +169,161 @@ function bpr_handle_upload() {
     exit;
 }
 
+// AJAX handler for load more grid items
+add_action('wp_ajax_bpr_load_more_grid', 'bpr_load_more_grid_handler');
+add_action('wp_ajax_nopriv_bpr_load_more_grid', 'bpr_load_more_grid_handler');
+
+function bpr_load_more_grid_handler() {
+    // Verify request
+    if (!isset($_POST['user_id']) || !isset($_POST['offset']) || !isset($_POST['limit'])) {
+        wp_die('Invalid request');
+    }
+    
+    $user_id = intval($_POST['user_id']);
+    $offset = intval($_POST['offset']);
+    $limit = intval($_POST['limit']);
+    
+    if ($user_id <= 0 || $offset < 0 || $limit <= 0 || $limit > 20) {
+        wp_die('Invalid parameters');
+    }
+    
+    // Query for more reels
+    $query = new WP_Query([
+        'post_type'      => 'bpr_reel',
+        'author'         => $user_id,
+        'post_status'    => 'publish',
+        'posts_per_page' => $limit,
+        'offset'         => $offset,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [
+            [
+                'key' => 'bpr_video',
+                'compare' => 'EXISTS'
+            ]
+        ]
+    ]);
+    
+    if (!$query->have_posts()) {
+        wp_send_json_success([
+            'html' => '',
+            'count' => 0,
+            'has_more' => false
+        ]);
+    }
+    
+    ob_start();
+    $count = 0;
+    
+    while ($query->have_posts()): $query->the_post();
+        $post_id = get_the_ID();
+        $video_id = get_post_meta($post_id, 'bpr_video', true);
+        $video_url = wp_get_attachment_url($video_id);
+        
+        if (!$video_url) continue;
+        
+        $title = get_the_title();
+        $content = get_the_content();
+        $views = get_post_meta($post_id, 'bpr_views', true) ?: 0;
+        $likes = get_post_meta($post_id, 'bpr_likes', true) ?: 0;
+        $author_id = get_the_author_meta('ID');
+        $author_name = get_the_author_meta('display_name');
+        $created_date = get_the_date();
+        $thumbnail = wp_get_attachment_image_url(get_post_thumbnail_id($post_id), 'medium') ?: '';
+        
+        $count++;
+        $index = $offset + $count;
+        ?>
+        <div class="bpr-grid-card" 
+             data-index="<?php echo esc_attr($index); ?>"
+             data-post-id="<?php echo esc_attr($post_id); ?>"
+             data-video-url="<?php echo esc_attr($video_url); ?>"
+             data-title="<?php echo esc_attr($title); ?>"
+             data-description="<?php echo esc_attr($content); ?>"
+             data-author="<?php echo esc_attr($author_name); ?>"
+             data-views="<?php echo esc_attr($views); ?>"
+             data-likes="<?php echo esc_attr($likes); ?>">
+            
+            <div class="bpr-card-media">
+                <video class="bpr-grid-video" 
+                       muted 
+                       loop 
+                       preload="metadata"
+                       playsinline
+                       poster="<?php echo esc_url($thumbnail); ?>">
+                    <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
+                </video>
+                
+                <div class="bpr-card-overlay">
+                    <div class="bpr-play-indicator">
+                        <div class="bpr-play-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="bpr-card-stats">
+                        <div class="bpr-stat-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5S21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12S9.24 7 12 7S17 9.24 17 12S14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12S10.34 15 12 15S15 13.66 15 12S13.66 9 12 9Z" fill="currentColor"/>
+                            </svg>
+                            <span><?php echo bpr_format_number($views); ?></span>
+                        </div>
+                        <?php if ($likes > 0): ?>
+                        <div class="bpr-stat-item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
+                            </svg>
+                            <span><?php echo bpr_format_number($likes); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <div class="bpr-card-duration">
+                    <span class="bpr-duration-badge" data-video-url="<?php echo esc_attr($video_url); ?>">0:00</span>
+                </div>
+            </div>
+            
+            <div class="bpr-card-info">
+                <h4 class="bpr-card-title"><?php echo esc_html($title); ?></h4>
+                <div class="bpr-card-meta">
+                    <span class="bpr-card-date"><?php echo esc_html($created_date); ?></span>
+                </div>
+            </div>
+        </div>
+        <?php
+    endwhile;
+    
+    wp_reset_postdata();
+    
+    $html = ob_get_clean();
+    
+    // Check if there are more videos
+    $total_query = new WP_Query([
+        'post_type'      => 'bpr_reel',
+        'author'         => $user_id,
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+        'meta_query'     => [
+            [
+                'key' => 'bpr_video',
+                'compare' => 'EXISTS'
+            ]
+        ]
+    ]);
+    
+    $has_more = ($offset + $count) < $total_query->found_posts;
+    
+    wp_send_json_success([
+        'html' => $html,
+        'count' => $count,
+        'has_more' => $has_more
+    ]);
+}
+
 // Upload form shortcode
 add_shortcode('bpr_upload_form', 'bpr_upload_form_shortcode');
 function bpr_upload_form_shortcode() {
@@ -349,26 +504,36 @@ function bpr_reels_feed_shortcode($atts) {
     return ob_get_clean();
 }
 
-// Profile grid view shortcode
-add_shortcode('bpr_reels_grid', 'bpr_reels_grid_shortcode');
-function bpr_reels_grid_shortcode($atts) {
+// Modern Profile Grid View - Completely Rewritten
+add_shortcode('bpr_reels_grid', 'bpr_modern_grid_shortcode');
+function bpr_modern_grid_shortcode($atts) {
     $atts = shortcode_atts([
         'user_id' => '',
-        'columns' => 3
+        'columns' => 3,
+        'limit' => 12,
+        'show_stats' => true,
+        'aspect_ratio' => '9:16'
     ], $atts);
     
+    // Get user ID
     $user_id = !empty($atts['user_id']) ? intval($atts['user_id']) : 
         (function_exists('bp_displayed_user_id') ? bp_displayed_user_id() : get_current_user_id());
     
     if (!$user_id) {
-        return '<p>' . __('No user specified.', 'buddypress-reels') . '</p>';
+        return '<div class="bpr-grid-empty"><p>' . __('No user specified.', 'buddypress-reels') . '</p></div>';
     }
     
+    // Get plugin options
+    $opts = get_option('bpr_options', [
+        'default_muted' => '1'
+    ]);
+    
+    // Query reels
     $query = new WP_Query([
         'post_type'      => 'bpr_reel',
         'author'         => $user_id,
         'post_status'    => 'publish',
-        'posts_per_page' => -1,
+        'posts_per_page' => intval($atts['limit']),
         'orderby'        => 'date',
         'order'          => 'DESC',
         'meta_query'     => [
@@ -380,72 +545,211 @@ function bpr_reels_grid_shortcode($atts) {
     ]);
     
     if (!$query->have_posts()) {
-        return '<div class="bpr-no-reels"><p>' . __('No reels found.', 'buddypress-reels') . '</p></div>';
+        return '<div class="bpr-grid-empty">
+                    <div class="bpr-empty-state">
+                        <div class="bpr-empty-icon">🎬</div>
+                        <h3>' . __('No Reels Yet', 'buddypress-reels') . '</h3>
+                        <p>' . __('Start creating amazing reels to see them here!', 'buddypress-reels') . '</p>
+                    </div>
+                </div>';
     }
     
     ob_start();
     ?>
-    <div class="bpr-grid-wrapper" data-columns="<?php echo esc_attr($atts['columns']); ?>">
-        <?php while ($query->have_posts()): $query->the_post();
-            $post_id = get_the_ID();
-            $video_id = get_post_meta($post_id, 'bpr_video', true);
-            $video_url = wp_get_attachment_url($video_id);
-            
-            if (!$video_url) continue;
-            
-            $views = get_post_meta($post_id, 'bpr_views', true) ?: 0;
-            ?>
-            <div class="bpr-grid-item" 
-                 data-post-id="<?php echo esc_attr($post_id); ?>"
-                 data-video="<?php echo esc_attr($video_url); ?>"
-                 data-title="<?php echo esc_attr(get_the_title()); ?>"
-                 data-description="<?php echo esc_attr(get_the_content()); ?>">
+    <div class="bpr-modern-grid" data-columns="<?php echo esc_attr($atts['columns']); ?>" data-aspect="<?php echo esc_attr($atts['aspect_ratio']); ?>">
+        <div class="bpr-grid-container">
+            <?php 
+            $index = 0;
+            while ($query->have_posts()): $query->the_post();
+                $post_id = get_the_ID();
+                $video_id = get_post_meta($post_id, 'bpr_video', true);
+                $video_url = wp_get_attachment_url($video_id);
                 
-                <video muted loop preload="metadata" poster="">
-                    <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
-                </video>
+                if (!$video_url) continue;
                 
-                <div class="bpr-grid-overlay">
-                    <div class="bpr-grid-stats">
-                        <span class="bpr-views-count">👁️ <?php echo number_format($views); ?></span>
+                $title = get_the_title();
+                $content = get_the_content();
+                $views = get_post_meta($post_id, 'bpr_views', true) ?: 0;
+                $likes = get_post_meta($post_id, 'bpr_likes', true) ?: 0;
+                $author_id = get_the_author_meta('ID');
+                $author_name = get_the_author_meta('display_name');
+                $created_date = get_the_date();
+                
+                // Generate thumbnail from video
+                $thumbnail = wp_get_attachment_image_url(get_post_thumbnail_id($post_id), 'medium') ?: '';
+                
+                $index++;
+                ?>
+                <div class="bpr-grid-card" 
+                     data-index="<?php echo esc_attr($index); ?>"
+                     data-post-id="<?php echo esc_attr($post_id); ?>"
+                     data-video-url="<?php echo esc_attr($video_url); ?>"
+                     data-title="<?php echo esc_attr($title); ?>"
+                     data-description="<?php echo esc_attr($content); ?>"
+                     data-author="<?php echo esc_attr($author_name); ?>"
+                     data-views="<?php echo esc_attr($views); ?>"
+                     data-likes="<?php echo esc_attr($likes); ?>">
+                    
+                    <div class="bpr-card-media">
+                        <video class="bpr-grid-video" 
+                               muted 
+                               loop 
+                               preload="metadata"
+                               playsinline
+                               poster="<?php echo esc_url($thumbnail); ?>">
+                            <source src="<?php echo esc_url($video_url); ?>" type="video/mp4">
+                        </video>
+                        
+                        <div class="bpr-card-overlay">
+                            <div class="bpr-play-indicator">
+                                <div class="bpr-play-btn">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <?php if ($atts['show_stats']): ?>
+                            <div class="bpr-card-stats">
+                                <div class="bpr-stat-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5S21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12S9.24 7 12 7S17 9.24 17 12S14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12S10.34 15 12 15S15 13.66 15 12S13.66 9 12 9Z" fill="currentColor"/>
+                                    </svg>
+                                    <span><?php echo bpr_format_number($views); ?></span>
+                                </div>
+                                <?php if ($likes > 0): ?>
+                                <div class="bpr-stat-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
+                                    </svg>
+                                    <span><?php echo bpr_format_number($likes); ?></span>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="bpr-card-duration">
+                            <span class="bpr-duration-badge" data-video-url="<?php echo esc_attr($video_url); ?>">0:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bpr-card-info">
+                        <h4 class="bpr-card-title"><?php echo esc_html($title); ?></h4>
+                        <div class="bpr-card-meta">
+                            <span class="bpr-card-date"><?php echo esc_html($created_date); ?></span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        <?php endwhile; 
-        wp_reset_postdata(); ?>
+            <?php endwhile; 
+            wp_reset_postdata(); ?>
+        </div>
+        
+        <?php if ($query->found_posts > $atts['limit']): ?>
+        <div class="bpr-grid-load-more">
+            <button class="bpr-load-more-btn" data-user-id="<?php echo esc_attr($user_id); ?>" data-loaded="<?php echo esc_attr($atts['limit']); ?>">
+                <span><?php _e('Load More Reels', 'buddypress-reels'); ?></span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+        <?php endif; ?>
     </div>
     
-    <!-- Modal for fullscreen playback -->
-    <div class="bpr-modal" id="bpr-modal">
-        <div class="bpr-modal-content">
-            <button class="bpr-close" aria-label="<?php esc_attr_e('Close', 'buddypress-reels'); ?>">&times;</button>
-            <div class="bpr-modal-video-wrapper">
-                <video id="bpr-full-video" controls preload="metadata">
-                    <?php _e('Your browser does not support the video tag.', 'buddypress-reels'); ?>
-                </video>
-                <div class="bpr-modal-controls">
-                    <div class="bpr-modal-mute-toggle" data-user-muted="false" title="<?php esc_attr_e('Toggle sound', 'buddypress-reels'); ?>"><?php echo ($opts['default_muted'] === '1') ? '🔇' : '🔊'; ?></div>
-                </div>
+    <!-- Enhanced Modal -->
+    <div class="bpr-grid-modal" id="bpr-grid-modal">
+        <div class="bpr-modal-backdrop"></div>
+        <div class="bpr-modal-container">
+            <div class="bpr-modal-header">
+                <button class="bpr-modal-close" aria-label="<?php esc_attr_e('Close', 'buddypress-reels'); ?>">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
-            <div class="bpr-modal-info">
-                <div class="bpr-modal-user-info">
-                    <?php if (function_exists('bp_core_fetch_avatar')): ?>
-                        <?php echo bp_core_fetch_avatar(['item_id' => $user_id, 'html' => true, 'width' => 32, 'height' => 32]); ?>
-                    <?php else: ?>
-                        <img src="<?php echo esc_url(get_avatar_url($user_id, ['size' => 32])); ?>" alt="" class="avatar">
-                    <?php endif; ?>
+            
+            <div class="bpr-modal-body">
+                <div class="bpr-modal-video-container">
+                    <video class="bpr-modal-video" 
+                           controls 
+                           preload="metadata"
+                           <?php echo ($opts['default_muted'] === '1') ? 'muted' : ''; ?>>
+                    </video>
                     
-                    <a href="<?php echo esc_url(function_exists('bp_core_get_user_domain') ? bp_core_get_user_domain($user_id) : get_author_posts_url($user_id)); ?>">
-                        <?php echo esc_html(get_the_author_meta('display_name', $user_id)); ?>
-                    </a>
+                    <div class="bpr-modal-video-overlay">
+                        <div class="bpr-modal-mute-toggle" data-user-muted="false">
+                            <?php echo ($opts['default_muted'] === '1') ? '🔇' : '🔊'; ?>
+                        </div>
+                    </div>
                 </div>
-                <div class="bpr-modal-content-info">
-                    <h4 class="bpr-modal-title"></h4>
-                    <p class="bpr-modal-description"></p>
+                
+                <div class="bpr-modal-sidebar">
+                    <div class="bpr-modal-content-info">
+                        <div class="bpr-modal-user">
+                            <div class="bpr-user-avatar"></div>
+                            <div class="bpr-user-details">
+                                <h3 class="bpr-username"></h3>
+                                <span class="bpr-post-date"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="bpr-modal-description">
+                            <h4 class="bpr-content-title"></h4>
+                            <p class="bpr-content-text"></p>
+                        </div>
+                        
+                        <div class="bpr-modal-stats">
+                            <div class="bpr-stat-group">
+                                <div class="bpr-stat">
+                                    <span class="bpr-stat-icon">👁️</span>
+                                    <span class="bpr-stat-value" data-stat="views">0</span>
+                                    <span class="bpr-stat-label"><?php _e('views', 'buddypress-reels'); ?></span>
+                                </div>
+                                <div class="bpr-stat">
+                                    <span class="bpr-stat-icon">❤️</span>
+                                    <span class="bpr-stat-value" data-stat="likes">0</span>
+                                    <span class="bpr-stat-label"><?php _e('likes', 'buddypress-reels'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bpr-modal-navigation">
+                        <button class="bpr-nav-btn bpr-prev-btn" disabled>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="currentColor"/>
+                            </svg>
+                            <span><?php _e('Previous', 'buddypress-reels'); ?></span>
+                        </button>
+                        <button class="bpr-nav-btn bpr-next-btn">
+                            <span><?php _e('Next', 'buddypress-reels'); ?></span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M8.59 16.59L10 18L16 12L10 6L8.59 7.41L13.17 12L8.59 16.59Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <?php
+    return ob_get_clean();
+}
+
+// Helper function to format numbers
+if (!function_exists('bpr_format_number')) {
+    function bpr_format_number($number) {
+        if ($number >= 1000000) {
+            return round($number / 1000000, 1) . 'M';
+        } elseif ($number >= 1000) {
+            return round($number / 1000, 1) . 'K';
+        }
+        return $number;
+    }
+}
+
     <?php
     return ob_get_clean();
 }
