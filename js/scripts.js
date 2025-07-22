@@ -1,86 +1,213 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const videos = document.querySelectorAll('.bpr-video');
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.8
-    };
+    console.log('BuddyPress Reels initialized');
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const video = entry.target;
-            const wrapper = video.closest('.bpr-video-wrapper');
-            const muteBtn = wrapper.querySelector('.bpr-mute-toggle');
+    // Initialize all functionality
+    initializeVideoControls();
+    initializeGridFunctionality();
+    initializeBuddyPressFunctionality();
 
-            if (entry.isIntersecting) {
-                // Pause and mute all other videos
-                videos.forEach(v => {
-                    if (v !== video) {
-                        v.pause();
-                        v.muted = true;
+    // Instagram-style video controls
+    function initializeVideoControls() {
+        const videos = document.querySelectorAll('.bpr-video');
+        let globalMuted = true; // Start muted like Instagram
+        
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.6 // Trigger when 60% visible
+        };
 
-                        const otherWrapper = v.closest('.bpr-video-wrapper');
-                        const otherMuteBtn = otherWrapper?.querySelector('.bpr-mute-toggle');
-                        if (otherMuteBtn) {
-                            otherMuteBtn.textContent = '🔇';
-                            otherMuteBtn.dataset.userMuted = 'false'; // Reset other buttons
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                const wrapper = video.closest('.bpr-video-wrapper');
+                const pauseOverlay = wrapper.querySelector('.bpr-pause-overlay');
+
+                if (entry.isIntersecting) {
+                    // Pause all other videos first
+                    videos.forEach(v => {
+                        if (v !== video) {
+                            v.pause();
+                            const otherWrapper = v.closest('.bpr-video-wrapper');
+                            const otherOverlay = otherWrapper?.querySelector('.bpr-pause-overlay');
+                            if (otherOverlay) {
+                                otherOverlay.style.display = 'none';
+                            }
                         }
+                    });
+
+                    // Play this video (muted by default)
+                    video.muted = globalMuted;
+                    video.play().catch(e => console.log('Autoplay failed:', e));
+                    
+                    if (pauseOverlay) {
+                        pauseOverlay.style.display = 'none';
                     }
-                });
 
-                // Play this video
-                video.play().catch(() => { });
-
-                // Only unmute if user hasn't manually muted
-                if (muteBtn?.dataset.userMuted !== 'true') {
-                    video.muted = false;
-                    muteBtn.textContent = '🔊';
+                } else {
+                    // Pause when out of view
+                    video.pause();
+                    if (pauseOverlay) {
+                        pauseOverlay.style.display = 'flex';
+                    }
                 }
+            });
+        }, observerOptions);
 
-            } else {
-                // Pause and mute if out of view
-                video.pause();
-                video.muted = true;
-                if (muteBtn) {
-                    muteBtn.textContent = '🔇';
+        videos.forEach(video => {
+            observer.observe(video);
+            
+            // Make sure videos start muted
+            video.muted = globalMuted;
+            
+            // Instagram-style click to pause/resume
+            video.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const wrapper = this.closest('.bpr-video-wrapper');
+                const pauseOverlay = wrapper.querySelector('.bpr-pause-overlay');
+                
+                if (this.paused) {
+                    // Resume
+                    this.play().catch(e => console.log('Play failed:', e));
+                    if (pauseOverlay) {
+                        pauseOverlay.style.display = 'none';
+                    }
+                    showTemporaryIcon(wrapper, '▶️', 'play');
+                } else {
+                    // Pause
+                    this.pause();
+                    if (pauseOverlay) {
+                        pauseOverlay.style.display = 'flex';
+                    }
+                    showTemporaryIcon(wrapper, '⏸️', 'pause');
                 }
-            }
+            });
         });
-    }, observerOptions);
 
-    videos.forEach(video => {
-        observer.observe(video);
-        video.setAttribute('data-observer-added', 'true');
+        // Handle mute/unmute buttons
+        document.querySelectorAll('.bpr-mute-toggle').forEach(button => {
+            if (button.hasAttribute('data-initialized')) return;
+            button.setAttribute('data-initialized', 'true');
+            
+            // Set initial state
+            button.textContent = globalMuted ? '🔇' : '🔊';
+            
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const wrapper = this.closest('.bpr-video-wrapper');
+                const video = wrapper.querySelector('video');
+                
+                if (video) {
+                    // Toggle mute state
+                    globalMuted = !globalMuted;
+                    video.muted = globalMuted;
+                    
+                    // Update button icon
+                    this.textContent = globalMuted ? '🔇' : '🔊';
+                    
+                    // Update all other videos to match global mute state
+                    videos.forEach(v => {
+                        if (v !== video) {
+                            v.muted = globalMuted;
+                        }
+                    });
+                    
+                    // Update all other mute buttons
+                    document.querySelectorAll('.bpr-mute-toggle').forEach(btn => {
+                        if (btn !== this) {
+                            btn.textContent = globalMuted ? '🔇' : '🔊';
+                        }
+                    });
+                    
+                    // Show temporary feedback
+                    showTemporaryIcon(wrapper, globalMuted ? '🔇' : '🔊', 'mute');
+                }
+            });
+        });
 
-        // Pause/Play on click
-        video.addEventListener('click', function () {
-            const icon = this.parentElement.querySelector('.bpr-play-icon, .bpr-pause-icon');
-            if (video.paused) {
-                video.play();
-                icon?.classList.remove('show');
-            } else {
+        // Instagram-style temporary icon animation
+        function showTemporaryIcon(wrapper, icon, type) {
+            // Remove any existing temporary icons
+            const existing = wrapper.querySelector('.bpr-temp-icon');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // Create new temporary icon
+            const tempIcon = document.createElement('div');
+            tempIcon.className = `bpr-temp-icon bpr-temp-${type}`;
+            tempIcon.textContent = icon;
+            tempIcon.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 64px;
+                color: white;
+                text-shadow: 0 2px 20px rgba(0,0,0,0.8);
+                z-index: 1000;
+                pointer-events: none;
+                animation: bpr-temp-icon-animation 0.6s ease-out forwards;
+            `;
+            
+            wrapper.appendChild(tempIcon);
+            
+            // Remove after animation
+            setTimeout(() => {
+                if (tempIcon.parentNode) {
+                    tempIcon.remove();
+                }
+            }, 600);
+        }
+    }
+
+    // Grid functionality
+    initializeGridFunctionality();
+
+    function initializeGridFunctionality() {
+        // Grid hover effects and video preview
+        document.querySelectorAll('.bpr-grid-item').forEach(item => {
+            if (item.hasAttribute('data-initialized')) return;
+            item.setAttribute('data-initialized', 'true');
+            
+            const video = item.querySelector('.bpr-grid-video');
+            if (!video) return;
+            
+            let hoverTimeout;
+            
+            item.addEventListener('mouseenter', function() {
+                clearTimeout(hoverTimeout);
+                hoverTimeout = setTimeout(() => {
+                    video.currentTime = 0;
+                    video.muted = true;
+                    video.play().catch(() => {});
+                }, 300);
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                clearTimeout(hoverTimeout);
                 video.pause();
-                icon?.classList.add('show');
-                setTimeout(() => {
-                    icon?.classList.remove('show');
-                }, 800);
-            }
+                video.currentTime = 0;
+            });
+            
+            // Click to open full video (you can customize this)
+            item.addEventListener('click', function() {
+                // Add your modal logic here if needed
+                console.log('Grid item clicked:', item.dataset.postId);
+            });
         });
-    });
-
-    // Mute toggle button
-    document.querySelectorAll('.bpr-mute-toggle').forEach(button => {
-        button.dataset.userMuted = 'false'; // Set default
-        button.dataset.listenerAdded = 'true'; // Mark as processed
-        button.addEventListener('click', function () {
-            const video = this.closest('.bpr-video-wrapper').querySelector('video');
-            if (video) {
-                video.muted = !video.muted;
-                this.textContent = video.muted ? '🔇' : '🔊';
-                this.dataset.userMuted = video.muted ? 'true' : 'false';
-            }
-        });
-    });
+        
+        // Load more grid functionality
+        const loadMoreGridBtn = document.querySelector('.bpr-load-more-grid');
+        if (loadMoreGridBtn && !loadMoreGridBtn.hasAttribute('data-initialized')) {
+            loadMoreGridBtn.setAttribute('data-initialized', 'true');
+            loadMoreGridBtn.addEventListener('click', bpr_load_more_grid_reels);
+        }
+    }
 
     // Load more functionality for profile feed
     const loadMoreBtn = document.querySelector('.bpr-load-more');
@@ -98,151 +225,123 @@ document.addEventListener('DOMContentLoaded', function () {
             // Make AJAX request
             const formData = new FormData();
             formData.append('action', 'bpr_load_more_profile_reels');
-            formData.append('user_id', userId);
             formData.append('page', currentPage + 1);
-            formData.append('posts_per_page', 10);
-            formData.append('nonce', bpr_ajax.nonce);
+            formData.append('user_id', userId);
+            formData.append('nonce', bprSettings.nonce);
             
-            fetch(bpr_ajax.url, {
+            fetch(bprSettings.ajax_url, {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Append new reels to the feed container
-                    const feedContainer = document.querySelector('.bpr-feed-container');
-                    if (feedContainer) {
-                        feedContainer.insertAdjacentHTML('beforeend', data.data.html);
-                        
-                        // Initialize video observers for new videos
-                        const newVideos = feedContainer.querySelectorAll('.bpr-video:not([data-observer-added])');
-                        newVideos.forEach(video => {
-                            observer.observe(video);
-                            video.setAttribute('data-observer-added', 'true');
-                            
-                            // Add click event for new videos
-                            video.addEventListener('click', function () {
-                                const icon = this.parentElement.querySelector('.bpr-play-icon, .bpr-pause-icon');
-                                if (video.paused) {
-                                    video.play();
-                                    icon?.classList.remove('show');
-                                } else {
-                                    video.pause();
-                                    icon?.classList.add('show');
-                                    setTimeout(() => {
-                                        icon?.classList.remove('show');
-                                    }, 800);
-                                }
-                            });
-                        });
-                        
-                        // Initialize mute buttons for new videos
-                        const newMuteButtons = feedContainer.querySelectorAll('.bpr-mute-toggle:not([data-listener-added])');
-                        newMuteButtons.forEach(button => {
-                            button.dataset.userMuted = 'false';
-                            button.dataset.listenerAdded = 'true';
-                            button.addEventListener('click', function () {
-                                const video = this.closest('.bpr-video-wrapper').querySelector('video');
-                                if (video) {
-                                    video.muted = !video.muted;
-                                    this.textContent = video.muted ? '🔇' : '🔊';
-                                    this.dataset.userMuted = video.muted ? 'true' : 'false';
-                                }
-                            });
-                        });
-                    }
+                    // Append new content
+                    const container = document.querySelector('.bpr-feed-container');
+                    container.insertAdjacentHTML('beforeend', data.data.html);
                     
+                    // Update button
                     this.dataset.page = currentPage + 1;
+                    this.disabled = false;
+                    this.textContent = 'Load More Reels';
                     
-                    if (!data.data.has_more) {
-                        this.textContent = 'All reels loaded';
-                        this.disabled = true;
-                    } else {
-                        this.textContent = 'Load More Reels';
-                        this.disabled = false;
+                    // Hide button if no more pages
+                    if (currentPage + 1 >= maxPages) {
+                        this.style.display = 'none';
                     }
+                    
+                    // Re-initialize new videos
+                    initializeVideoControls();
                 } else {
-                    this.textContent = 'Error loading reels';
-                    setTimeout(() => {
-                        this.textContent = 'Load More Reels';
-                        this.disabled = false;
-                    }, 2000);
+                    this.disabled = false;
+                    this.textContent = 'Load More Reels';
+                    console.error('Failed to load more reels');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                this.textContent = 'Error loading reels';
-                setTimeout(() => {
-                    this.textContent = 'Load More Reels';
-                    this.disabled = false;
-                }, 2000);
+                this.disabled = false;
+                this.textContent = 'Load More Reels';
+                console.error('Error loading more reels:', error);
             });
         });
     }
 
-    // Grid functionality
-    initializeGridFunctionality();
-
-    function initializeGridFunctionality() {
-        // Grid hover effects and video preview
-        document.querySelectorAll('.bpr-grid-item').forEach(item => {
-            const video = item.querySelector('.bpr-grid-video');
-            
-            if (!video) return;
-            
-            let hoverTimeout;
-            
-            item.addEventListener('mouseenter', function() {
-                hoverTimeout = setTimeout(() => {
-                    if (video.paused) {
-                        video.play().catch(() => {});
-                    }
-                }, 300); // Delay to prevent accidental triggers
-            });
-            
-            item.addEventListener('mouseleave', function() {
-                clearTimeout(hoverTimeout);
-                if (!video.paused) {
-                    video.pause();
-                    video.currentTime = 0; // Reset to beginning
-                }
-            });
-            
-            // Click to open video in modal/overlay (optional - can be expanded)
-            item.addEventListener('click', function() {
-                const postId = this.dataset.postId;
-                if (postId) {
-                    // For now, just play/pause the video
-                    // In the future, this could open a full-screen modal
-                    if (video.paused) {
-                        video.play().catch(() => {});
-                    } else {
-                        video.pause();
-                    }
-                }
-            });
-        });
-
-        // Grid load more functionality
-        const gridLoadMoreBtn = document.querySelector('.bpr-load-more-grid');
-        if (gridLoadMoreBtn) {
-            gridLoadMoreBtn.addEventListener('click', function() {
-                const currentPage = parseInt(this.dataset.page);
-                const maxPages = parseInt(this.dataset.maxPages);
-                const userId = this.dataset.userId;
+    // Grid load more functionality
+    function bpr_load_more_grid_reels() {
+        const button = this;
+        const currentPage = parseInt(button.dataset.page);
+        const maxPages = parseInt(button.dataset.maxPages);
+        const userId = button.dataset.userId;
+        
+        if (currentPage >= maxPages) return;
+        
+        button.disabled = true;
+        button.textContent = 'Loading...';
+        
+        const formData = new FormData();
+        formData.append('action', 'bpr_load_more_grid_reels');
+        formData.append('page', currentPage + 1);
+        formData.append('user_id', userId);
+        formData.append('posts_per_page', 12);
+        formData.append('nonce', bprSettings.nonce);
+        
+        fetch(bprSettings.ajax_url, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.querySelector('.bpr-grid-wrapper');
+                container.insertAdjacentHTML('beforeend', data.data.html);
                 
-                if (currentPage >= maxPages) return;
+                button.dataset.page = currentPage + 1;
+                button.disabled = false;
+                button.textContent = 'Load More Reels';
+                
+                if (currentPage + 1 >= maxPages) {
+                    button.style.display = 'none';
+                }
+                
+                // Re-initialize new grid items
+                initializeGridFunctionality();
+            } else {
+                button.disabled = false;
+                button.textContent = 'Load More Reels';
+            }
+        })
+        .catch(error => {
+            button.disabled = false;
+            button.textContent = 'Load More Reels';
+            console.error('Error:', error);
+        });
+    }
+
+    // Mark new grid items as initialized to prevent duplicate processing
+    document.querySelectorAll('.bpr-grid-item').forEach(item => {
+        item.setAttribute('data-initialized', 'true');
+    });
+
+    function initializeBuddyPressFunctionality() {
+        // Handle BuddyPress like buttons
+        document.querySelectorAll('.bpr-bp-like-btn').forEach(button => {
+            if (button.hasAttribute('data-bp-initialized')) return;
+            button.setAttribute('data-bp-initialized', 'true');
+            
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const activityId = this.dataset.activityId;
+                const isFavorited = this.dataset.favorited === 'true';
+                
+                if (!activityId) return;
                 
                 this.disabled = true;
-                this.textContent = 'Loading...';
                 
-                // Make AJAX request
                 const formData = new FormData();
-                formData.append('action', 'bpr_load_more_grid_reels');
-                formData.append('user_id', userId);
-                formData.append('page', currentPage + 1);
-                formData.append('posts_per_page', 12);
+                formData.append('action', 'bpr_bp_toggle_favorite');
+                formData.append('activity_id', activityId);
                 formData.append('nonce', bprSettings.nonce);
                 
                 fetch(bprSettings.ajax_url, {
@@ -252,78 +351,94 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Append new grid items
-                        const gridWrapper = document.querySelector('.bpr-grid-wrapper');
-                        if (gridWrapper) {
-                            gridWrapper.insertAdjacentHTML('beforeend', data.data.html);
-                            
-                            // Initialize grid functionality for new items
-                            const newItems = gridWrapper.querySelectorAll('.bpr-grid-item:not([data-initialized])');
-                            newItems.forEach(item => {
-                                item.setAttribute('data-initialized', 'true');
-                                const video = item.querySelector('.bpr-grid-video');
-                                
-                                if (!video) return;
-                                
-                                let hoverTimeout;
-                                
-                                item.addEventListener('mouseenter', function() {
-                                    hoverTimeout = setTimeout(() => {
-                                        if (video.paused) {
-                                            video.play().catch(() => {});
-                                        }
-                                    }, 300);
-                                });
-                                
-                                item.addEventListener('mouseleave', function() {
-                                    clearTimeout(hoverTimeout);
-                                    if (!video.paused) {
-                                        video.pause();
-                                        video.currentTime = 0;
-                                    }
-                                });
-                                
-                                item.addEventListener('click', function() {
-                                    if (video.paused) {
-                                        video.play().catch(() => {});
-                                    } else {
-                                        video.pause();
-                                    }
-                                });
-                            });
-                        }
+                        // Update button state
+                        this.dataset.favorited = data.data.favorited ? 'true' : 'false';
+                        const icon = this.querySelector('.bpr-bp-icon');
+                        const label = this.querySelector('.bpr-bp-label');
                         
-                        this.dataset.page = currentPage + 1;
-                        
-                        if (!data.data.has_more) {
-                            this.textContent = 'All reels loaded';
-                            this.disabled = true;
+                        if (data.data.favorited) {
+                            icon.textContent = '❤️';
+                            label.textContent = 'Unlike';
                         } else {
-                            this.textContent = 'Load More Reels';
-                            this.disabled = false;
+                            icon.textContent = '🤍';
+                            label.textContent = 'Like';
                         }
+                        
+                        // Update grid stats if present
+                        const gridItem = this.closest('.bpr-grid-item');
+                        if (gridItem) {
+                            const statElement = gridItem.querySelector('.bpr-grid-stats .bpr-grid-stat:first-child span:last-child');
+                            if (statElement) {
+                                statElement.textContent = data.data.count.toLocaleString();
+                            }
+                        }
+                        
+                        this.disabled = false;
                     } else {
-                        this.textContent = 'Error loading reels';
-                        setTimeout(() => {
-                            this.textContent = 'Load More Reels';
-                            this.disabled = false;
-                        }, 2000);
+                        console.error('Failed to toggle favorite:', data.data);
+                        this.disabled = false;
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    this.textContent = 'Error loading reels';
-                    setTimeout(() => {
-                        this.textContent = 'Load More Reels';
-                        this.disabled = false;
-                    }, 2000);
+                    console.error('Error toggling favorite:', error);
+                    this.disabled = false;
                 });
             });
-        }
+        });
+        
+        // Handle BuddyPress comment buttons
+        document.querySelectorAll('.bpr-bp-comment-btn').forEach(button => {
+            if (button.hasAttribute('data-bp-initialized')) return;
+            button.setAttribute('data-bp-initialized', 'true');
+            
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const activityId = this.dataset.activityId;
+                if (!activityId) return;
+                
+                // Simple prompt for now - can be enhanced with a modal later
+                const comment = prompt('Enter your comment:');
+                if (!comment || comment.trim() === '') return;
+                
+                this.disabled = true;
+                
+                const formData = new FormData();
+                formData.append('action', 'bpr_bp_add_comment');
+                formData.append('activity_id', activityId);
+                formData.append('comment_content', comment.trim());
+                formData.append('nonce', bprSettings.nonce);
+                
+                fetch(bprSettings.ajax_url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update grid stats if present
+                        const gridItem = this.closest('.bpr-grid-item');
+                        if (gridItem) {
+                            const statElement = gridItem.querySelector('.bpr-grid-stats .bpr-grid-stat:nth-child(2) span:last-child');
+                            if (statElement) {
+                                statElement.textContent = data.data.comment_count.toLocaleString();
+                            }
+                        }
+                        
+                        alert(data.data.message);
+                        this.disabled = false;
+                    } else {
+                        alert('Failed to add comment: ' + (data.data || 'Unknown error'));
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding comment:', error);
+                    alert('Error adding comment');
+                    this.disabled = false;
+                });
+            });
+        });
     }
-
-    // Mark existing grid items as initialized
-    document.querySelectorAll('.bpr-grid-item').forEach(item => {
-        item.setAttribute('data-initialized', 'true');
-    });
 });
