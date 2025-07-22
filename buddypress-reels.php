@@ -302,7 +302,7 @@ function bpr_reels_feed_shortcode($atts) {
                 </video>
                 
                 <div class="bpr-controls">
-                    <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>">🔇</button>
+                    <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>" data-muted="true">🔇</button>
                 </div>
                 
                 <div class="bpr-overlay">
@@ -418,7 +418,7 @@ function bpr_profile_feed_shortcode($atts) {
                         
                         <div class="bpr-video-overlay">
                             <div class="bpr-controls">
-                                <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>">🔇</button>
+                                <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>" data-muted="true">🔇</button>
                             </div>
                         </div>
                         
@@ -722,7 +722,7 @@ function bpr_handle_load_more_profile_reels() {
                 
                 <div class="bpr-video-overlay">
                     <div class="bpr-controls">
-                        <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>">🔇</button>
+                        <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>" data-muted="true">🔇</button>
                     </div>
                 </div>
                 
