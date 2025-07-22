@@ -31,12 +31,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             const otherWrapper = v.closest('.bpr-video-wrapper');
                             const otherOverlay = otherWrapper?.querySelector('.bpr-pause-overlay');
                             if (otherOverlay) {
-                                otherOverlay.style.display = 'none';
+                                otherOverlay.style.display = 'flex';
                             }
                         }
                     });
 
-                    // Play this video (muted by default)
+                    // Play this video (muted by default, respect global mute state)
                     video.muted = globalMuted;
                     video.play().catch(e => console.log('Autoplay failed:', e));
                     
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                 } else {
-                    // Pause when out of view
+                    // Pause when out of view and show pause overlay
                     video.pause();
                     if (pauseOverlay) {
                         pauseOverlay.style.display = 'flex';
@@ -57,8 +57,12 @@ document.addEventListener('DOMContentLoaded', function () {
         videos.forEach(video => {
             observer.observe(video);
             
-            // Make sure videos start muted
+            // Make sure videos start muted and remove any hover behavior
             video.muted = globalMuted;
+            
+            // Remove any existing hover listeners that might cause muting
+            video.onmouseenter = null;
+            video.onmouseleave = null;
             
             // Instagram-style click to pause/resume
             video.addEventListener('click', function(e) {
@@ -74,14 +78,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (pauseOverlay) {
                         pauseOverlay.style.display = 'none';
                     }
-                    showTemporaryIcon(wrapper, '▶️', 'play');
+                    showInstagramIcon(wrapper, '▶️', 'play');
                 } else {
                     // Pause
                     this.pause();
                     if (pauseOverlay) {
                         pauseOverlay.style.display = 'flex';
                     }
-                    showTemporaryIcon(wrapper, '⏸️', 'pause');
+                    showInstagramIcon(wrapper, '⏸️', 'pause');
                 }
             });
         });
@@ -102,74 +106,75 @@ document.addEventListener('DOMContentLoaded', function () {
                 const video = wrapper.querySelector('video');
                 
                 if (video) {
-                    // Toggle mute state
+                    // Toggle global mute state
                     globalMuted = !globalMuted;
-                    video.muted = globalMuted;
                     
-                    // Update button icon
-                    this.textContent = globalMuted ? '🔇' : '🔊';
-                    
-                    // Update all other videos to match global mute state
+                    // Update ALL videos to match global mute state (Instagram behavior)
                     videos.forEach(v => {
-                        if (v !== video) {
-                            v.muted = globalMuted;
-                        }
+                        v.muted = globalMuted;
                     });
                     
-                    // Update all other mute buttons
+                    // Update ALL mute buttons to show consistent state
                     document.querySelectorAll('.bpr-mute-toggle').forEach(btn => {
-                        if (btn !== this) {
-                            btn.textContent = globalMuted ? '🔇' : '🔊';
-                        }
+                        btn.textContent = globalMuted ? '🔇' : '🔊';
                     });
                     
                     // Show temporary feedback
-                    showTemporaryIcon(wrapper, globalMuted ? '🔇' : '🔊', 'mute');
+                    showInstagramIcon(wrapper, globalMuted ? '🔇' : '🔊', 'mute');
                 }
             });
         });
 
-        // Instagram-style temporary icon animation
-        function showTemporaryIcon(wrapper, icon, type) {
+        // Instagram-style temporary icon animation (enhanced)
+        function showInstagramIcon(wrapper, icon, type) {
             // Remove any existing temporary icons
             const existing = wrapper.querySelector('.bpr-temp-icon');
             if (existing) {
                 existing.remove();
             }
             
-            // Create new temporary icon
+            // Create new temporary icon with Instagram styling
             const tempIcon = document.createElement('div');
             tempIcon.className = `bpr-temp-icon bpr-temp-${type}`;
-            tempIcon.textContent = icon;
-            tempIcon.style.cssText = `
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                font-size: 64px;
-                color: white;
-                text-shadow: 0 2px 20px rgba(0,0,0,0.8);
-                z-index: 1000;
-                pointer-events: none;
-                animation: bpr-temp-icon-animation 0.6s ease-out forwards;
-            `;
+            tempIcon.innerHTML = icon;
             
+            // Enhanced Instagram-style positioning and styling
+            const styles = {
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: type === 'mute' ? '48px' : '80px',
+                color: 'white',
+                textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.9)',
+                zIndex: '1000',
+                pointerEvents: 'none',
+                animation: 'bpr-instagram-icon 1s ease-out forwards',
+                background: type !== 'mute' ? 'rgba(0,0,0,0.5)' : 'transparent',
+                borderRadius: type !== 'mute' ? '50%' : '0',
+                width: type !== 'mute' ? '120px' : 'auto',
+                height: type !== 'mute' ? '120px' : 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: type !== 'mute' ? 'blur(10px)' : 'none'
+            };
+            
+            Object.assign(tempIcon.style, styles);
             wrapper.appendChild(tempIcon);
             
-            // Remove after animation
+            // Remove after animation with Instagram timing
             setTimeout(() => {
                 if (tempIcon.parentNode) {
                     tempIcon.remove();
                 }
-            }, 600);
+            }, 1000);
         }
     }
 
-    // Grid functionality
-    initializeGridFunctionality();
-
+    // Grid functionality (keep existing hover behavior for previews)
     function initializeGridFunctionality() {
-        // Grid hover effects and video preview
+        // Grid hover effects and video preview (this is different from main video hover)
         document.querySelectorAll('.bpr-grid-item').forEach(item => {
             if (item.hasAttribute('data-initialized')) return;
             item.setAttribute('data-initialized', 'true');
@@ -183,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearTimeout(hoverTimeout);
                 hoverTimeout = setTimeout(() => {
                     video.currentTime = 0;
-                    video.muted = true;
+                    video.muted = true; // Grid previews are always muted
                     video.play().catch(() => {});
                 }, 300);
             });
