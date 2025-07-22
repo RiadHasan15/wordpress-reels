@@ -365,6 +365,27 @@ body {
     transform: scale(0.95) rotate(-2deg);
 }
 
+/* Ensure mute button icons are always visible with fallback */
+.bpr-mute-toggle[data-muted="true"]:empty::after {
+    content: "🔇";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    pointer-events: none;
+}
+
+.bpr-mute-toggle[data-muted="false"]:empty::after {
+    content: "🔊";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    pointer-events: none;
+}
+
 /* Premium Overlay with Advanced Gradients */
 .bpr-overlay {
     position: absolute;
