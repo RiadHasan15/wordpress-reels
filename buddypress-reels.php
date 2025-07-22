@@ -302,7 +302,7 @@ function bpr_reels_feed_shortcode($atts) {
                 </video>
                 
                 <div class="bpr-controls">
-                    <div class="bpr-mute-toggle" data-user-muted="false" title="<?php esc_attr_e('Toggle sound', 'buddypress-reels'); ?>">🔇</div>
+                    <button class="bpr-mute-toggle" type="button" aria-label="<?php esc_attr_e('Toggle mute', 'buddypress-reels'); ?>">🔇</button>
                 </div>
                 
                 <div class="bpr-overlay">
