@@ -1239,3 +1239,56 @@ body {
         justify-content: space-between;
     }
 }
+
+/* CRITICAL FIX: Ensure mute/unmute icons are ALWAYS visible */
+.bpr-mute-toggle {
+    position: relative;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: inherit !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+}
+
+/* Fallback icon system for empty buttons */
+.bpr-mute-toggle:empty::before {
+    content: "🔇";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Force visibility for all mute button content */
+.bpr-mute-toggle * {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Ensure emoji rendering works across browsers */
+.bpr-mute-toggle {
+    font-variant-emoji: emoji !important;
+    font-feature-settings: "liga", "kern" !important;
+}
+
+/* High contrast fallback */
+@media (prefers-contrast: high) {
+    .bpr-mute-toggle:empty::before {
+        content: "🔊";
+        background: rgba(0,0,0,0.8);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}

@@ -447,3 +447,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+// CRITICAL FIX: Ensure mute button icons are always visible
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to ensure mute buttons show icons
+    function ensureMuteButtonsVisible() {
+        const muteButtons = document.querySelectorAll('.bpr-mute-toggle');
+        muteButtons.forEach(button => {
+            // If button is empty or has no visible content, add default icon
+            if (!button.textContent.trim() && !button.innerHTML.trim()) {
+                button.innerHTML = '🔇';
+            }
+            
+            // Ensure button styling
+            button.style.fontSize = '20px';
+            button.style.lineHeight = '1';
+            button.style.display = 'flex';
+            button.style.alignItems = 'center';
+            button.style.justifyContent = 'center';
+        });
+    }
+    
+    // Run immediately
+    ensureMuteButtonsVisible();
+    
+    // Run periodically to catch dynamically loaded content
+    setInterval(ensureMuteButtonsVisible, 2000);
+    
+    // Run when new content is added
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                ensureMuteButtonsVisible();
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});
