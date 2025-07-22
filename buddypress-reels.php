@@ -152,7 +152,7 @@ function bpr_handle_upload() {
             bp_core_get_userlink(get_current_user_id()) : 
             get_the_author_meta('display_name', get_current_user_id());
             
-        bp_activity_add([
+        $activity_id = bp_activity_add([
             'user_id'      => get_current_user_id(),
             'component'    => 'reels',
             'type'         => 'bpr_reel_upload',
@@ -162,6 +162,15 @@ function bpr_handle_upload() {
             'item_id'      => $post_id,
             'recorded_time'=> bp_core_current_time()
         ]);
+        
+        if ($activity_id) {
+            // Store the activity ID in post meta for future reference
+            update_post_meta($post_id, 'bp_activity_id', $activity_id);
+            
+            // Add custom meta to activity
+            bp_activity_update_meta($activity_id, 'reel_post_id', $post_id);
+            bp_activity_update_meta($activity_id, 'reel_video_id', $att_id);
+        }
     }
 
     wp_redirect(add_query_arg('bpr_msg', 'success', wp_get_referer()));
@@ -501,12 +510,6 @@ function bpr_reels_grid_shortcode($atts) {
     ob_start();
     ?>
     <div class="bpr-grid-container">
-        <div class="bpr-grid-header">
-            <div class="bpr-grid-stats">
-                <span class="bpr-stat-number"><?php echo number_format($query->found_posts); ?></span>
-                <span class="bpr-stat-label"><?php _e('Reels', 'buddypress-reels'); ?></span>
-            </div>
-        </div>
         
         <div class="bpr-grid-wrapper">
             <?php while ($query->have_posts()): $query->the_post();
@@ -532,10 +535,34 @@ function bpr_reels_grid_shortcode($atts) {
                         </video>
                         
                         <div class="bpr-grid-overlay">
-                            <div class="bpr-play-icon">▶</div>
                             <?php if (get_the_title()): ?>
                                 <div class="bpr-grid-title"><?php echo esc_html(wp_trim_words(get_the_title(), 3)); ?></div>
                             <?php endif; ?>
+                            
+                            <?php if (function_exists('bp_is_active') && bp_is_active('activity')): 
+                                // Get BuddyPress activity for this reel
+                                $activity_id = get_post_meta($post_id, 'bp_activity_id', true);
+                                if ($activity_id) {
+                                    $activity = new BP_Activity_Activity($activity_id);
+                                    if ($activity->id) {
+                                        $like_count = bp_activity_get_meta($activity_id, 'favorite_count', true) ?: 0;
+                                        $comment_count = BP_Activity_Activity::get_child_comments($activity_id);
+                                        $comment_count = is_array($comment_count) ? count($comment_count) : 0;
+                                        ?>
+                                        <div class="bpr-grid-stats">
+                                            <span class="bpr-grid-stat">
+                                                <span class="bpr-grid-icon">❤️</span>
+                                                <span><?php echo number_format($like_count); ?></span>
+                                            </span>
+                                            <span class="bpr-grid-stat">
+                                                <span class="bpr-grid-icon">💬</span>
+                                                <span><?php echo number_format($comment_count); ?></span>
+                                            </span>
+                                        </div>
+                                        <?php
+                                    }
+                                }
+                            endif; ?>
                         </div>
                     </div>
                 </div>
