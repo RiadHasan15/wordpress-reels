@@ -1239,3 +1239,117 @@ body {
         justify-content: space-between;
     }
 }
+
+/* 🔧 MUTE BUTTON ICON VISIBILITY FIX - CSS ONLY SOLUTION */
+/* This ensures mute/unmute buttons ALWAYS show icons */
+
+.bpr-mute-toggle {
+    /* Force emoji visibility */
+    font-size: 20px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Enhanced emoji rendering */
+    font-variant-emoji: emoji !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif !important;
+}
+
+/* Primary fallback: If button appears empty, show mute icon */
+.bpr-mute-toggle:empty::after {
+    content: "🔇";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Secondary fallback: If content is not visible */
+.bpr-mute-toggle:not(:empty)::before {
+    content: attr(aria-label);
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.bpr-mute-toggle:hover:not(:empty)::before {
+    opacity: 1;
+}
+
+/* Force visibility of any content inside mute button */
+.bpr-mute-toggle * {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline !important;
+}
+
+/* Ensure button content is never hidden */
+.bpr-mute-toggle {
+    overflow: visible !important;
+    text-indent: 0 !important;
+    color: inherit !important;
+    background-color: transparent !important;
+}
+
+/* Alternative icon display for different states */
+.bpr-mute-toggle[title*="mute"]::after,
+.bpr-mute-toggle[aria-label*="mute"]::after {
+    content: "🔇" !important;
+}
+
+.bpr-mute-toggle[title*="unmute"]::after,
+.bpr-mute-toggle[aria-label*="unmute"]::after {
+    content: "🔊" !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .bpr-mute-toggle:empty::after {
+        background: rgba(0,0,0,0.9);
+        color: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .bpr-mute-toggle::before {
+        transition: none;
+    }
+}
+
+/* Large text support */
+@media (min-resolution: 2dppx) {
+    .bpr-mute-toggle {
+        font-size: 22px !important;
+    }
+    
+    .bpr-mute-toggle:empty::after {
+        font-size: 22px !important;
+    }
+}
