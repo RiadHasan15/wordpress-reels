@@ -882,7 +882,7 @@ function bpr_setup_nav() {
 
 function bpr_profile_reels_screen() {
     add_action('bp_template_content', function() {
-        echo do_shortcode('[bpr_profile_grid]');
+        echo do_shortcode('[bpr_reels_grid]');
     });
     bp_core_load_template('members/single/plugins');
 }
