@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (button.hasAttribute('data-initialized')) return;
             button.setAttribute('data-initialized', 'true');
             
-            // Set initial state
-            button.textContent = globalMuted ? '🔇' : '🔊';
+            // Set initial state with enhanced emoji rendering
+            button.innerHTML = globalMuted ? '🔇' : '🔊';
             
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     // Update ALL mute buttons to show consistent state
                     document.querySelectorAll('.bpr-mute-toggle').forEach(btn => {
-                        btn.textContent = globalMuted ? '🔇' : '🔊';
+                        btn.innerHTML = globalMuted ? '🔇' : '🔊';
                     });
                     
                     // Show temporary feedback

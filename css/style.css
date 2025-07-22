@@ -365,6 +365,20 @@ body {
     transform: scale(0.95) rotate(-2deg);
 }
 
+/* Enhanced mute button emoji rendering */
+.bpr-mute-toggle {
+    font-variant-emoji: emoji;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+}
+
+/* Fallback for empty mute buttons */
+.bpr-mute-toggle:empty::after {
+    content: "🔇";
+    font-size: inherit;
+}
+
 /* Premium Overlay with Advanced Gradients */
 .bpr-overlay {
     position: absolute;
