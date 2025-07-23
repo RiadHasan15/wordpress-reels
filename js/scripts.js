@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('BuddyPress Reels initialized');
+    // BuddyPress Reels initialized
 
     // Initialize all functionality
     initializeVideoControls();
@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     // Play this video (muted by default, respect global mute state)
                     video.muted = globalMuted;
-                    video.play().catch(e => console.log('Autoplay failed:', e));
+                    video.play().catch(e => {
+                        // Autoplay failed - this is normal in many browsers
+                    });
                     
                     if (pauseOverlay) {
                         pauseOverlay.style.display = 'none';
@@ -74,7 +76,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 if (this.paused) {
                     // Resume
-                    this.play().catch(e => console.log('Play failed:', e));
+                    this.play().catch(e => {
+                        // Play failed - this is normal in some browsers
+                    });
                     if (pauseOverlay) {
                         pauseOverlay.style.display = 'none';
                     }
@@ -223,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Click to open full video (you can customize this)
             item.addEventListener('click', function() {
                 // Add your modal logic here if needed
-                console.log('Grid item clicked:', item.dataset.postId);
+                // Grid item clicked - implement modal or navigation logic
             });
         });
         
@@ -458,16 +462,36 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         }
                         
-                        alert(data.data.message);
+                        // Show success message (consider using a more elegant notification)
+                        if (window.bprShowNotification) {
+                            window.bprShowNotification(data.data.message, 'success');
+                        } else {
+                            alert(data.data.message);
+                        }
                         this.disabled = false;
                     } else {
-                        alert('Failed to add comment: ' + (data.data || 'Unknown error'));
+                        // Show error message (consider using a more elegant notification)
+                        const errorMsg = 'Failed to add comment: ' + (data.data || 'Unknown error');
+                        if (window.bprShowNotification) {
+                            window.bprShowNotification(errorMsg, 'error');
+                        } else {
+                            alert(errorMsg);
+                        }
                         this.disabled = false;
                     }
                 })
                 .catch(error => {
-                    console.error('Error adding comment:', error);
-                    alert('Error adding comment');
+                    // Log error for debugging
+                    if (console && console.error) {
+                        console.error('Error adding comment:', error);
+                    }
+                    // Show user-friendly error message
+                    const errorMsg = 'Error adding comment. Please try again.';
+                    if (window.bprShowNotification) {
+                        window.bprShowNotification(errorMsg, 'error');
+                    } else {
+                        alert(errorMsg);
+                    }
                     this.disabled = false;
                 });
             });
