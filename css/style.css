@@ -535,65 +535,7 @@ body {
     animation: bpr-slide-up 1s ease-out 0.2s both;
 }
 
-.bpr-like-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: var(--bpr-glass);
-    border: none;
-    border-radius: var(--bpr-radius-lg);
-    padding: var(--bpr-space-md) var(--bpr-space-lg);
-    color: var(--bpr-text-primary);
-    cursor: pointer;
-    transition: var(--bpr-transition-bounce);
-    backdrop-filter: var(--bpr-backdrop-blur);
-    border: 1px solid var(--bpr-glass-border);
-    position: relative;
-    overflow: hidden;
-    min-width: 60px;
-}
 
-.bpr-like-btn::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: var(--bpr-gradient-primary);
-    border-radius: var(--bpr-radius-full);
-    transition: var(--bpr-transition-normal);
-    transform: translate(-50%, -50%);
-    z-index: -1;
-}
-
-.bpr-like-btn:hover {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: var(--bpr-shadow-neon);
-}
-
-.bpr-like-btn:hover::before {
-    width: 120%;
-    height: 120%;
-}
-
-.bpr-like-btn.liked {
-    background: var(--bpr-gradient-primary);
-    color: var(--bpr-light);
-    animation: bpr-bounce-in 0.6s ease-out, bpr-glow 2s ease-in-out infinite;
-}
-
-.bpr-like-btn.liked::before {
-    width: 100%;
-    height: 100%;
-}
-
-.bpr-like-count {
-    font-size: 13px;
-    margin-top: var(--bpr-space-xs);
-    font-weight: var(--bpr-font-weight-semibold);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-}
 
 /* Enhanced Pause Overlay */
 .bpr-pause-overlay {
