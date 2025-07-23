@@ -96,9 +96,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (button.hasAttribute('data-initialized')) return;
                 button.setAttribute('data-initialized', 'true');
                 
-                // Set initial state with enhanced emoji rendering
-                button.innerHTML = globalMuted ? '🔇' : '🔊';
+                // Set initial state with enhanced emoji rendering and forced visibility
+                const icon = globalMuted ? '🔇' : '🔊';
+                button.innerHTML = icon;
                 button.setAttribute('data-muted', globalMuted ? 'true' : 'false');
+                
+                // Force visibility and styling for better icon display
+                button.style.opacity = '1';
+                button.style.visibility = 'visible';
+                button.style.fontSize = '22px';
+                button.style.display = 'flex';
                 
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -118,8 +125,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         // Update ALL mute buttons to show consistent state
                         document.querySelectorAll('.bpr-mute-toggle').forEach(btn => {
-                            btn.innerHTML = globalMuted ? '🔇' : '🔊';
+                            const icon = globalMuted ? '🔇' : '🔊';
+                            btn.innerHTML = icon;
                             btn.setAttribute('data-muted', globalMuted ? 'true' : 'false');
+                            
+                            // Ensure icon visibility is maintained
+                            btn.style.opacity = '1';
+                            btn.style.visibility = 'visible';
+                            btn.style.fontSize = '22px';
+                            btn.style.display = 'flex';
                         });
                         
                         // Show temporary feedback
