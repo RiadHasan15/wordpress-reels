@@ -371,12 +371,34 @@ body {
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif;
+    position: relative;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
-/* Fallback for empty mute buttons */
+/* Force emoji visibility for content */
+.bpr-mute-toggle * {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Fallback for empty mute buttons based on state */
 .bpr-mute-toggle:empty::after {
-    content: "🔇";
     font-size: inherit;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.bpr-mute-toggle[data-muted="true"]:empty::after {
+    content: "🔇";
+}
+
+.bpr-mute-toggle[data-muted="false"]:empty::after {
+    content: "🔊";
 }
 
 /* Premium Overlay with Advanced Gradients */
