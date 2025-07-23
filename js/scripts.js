@@ -91,39 +91,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Handle mute/unmute buttons
-        document.querySelectorAll('.bpr-mute-toggle').forEach(button => {
-            if (button.hasAttribute('data-initialized')) return;
-            button.setAttribute('data-initialized', 'true');
-            
-            // Set initial state with enhanced emoji rendering
-            button.innerHTML = globalMuted ? '🔇' : '🔊';
-            
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+        window.initializeMuteButtons = function() {
+            document.querySelectorAll('.bpr-mute-toggle').forEach(button => {
+                if (button.hasAttribute('data-initialized')) return;
+                button.setAttribute('data-initialized', 'true');
                 
-                const wrapper = this.closest('.bpr-video-wrapper');
-                const video = wrapper.querySelector('video');
+                // Set initial state with enhanced emoji rendering
+                button.innerHTML = globalMuted ? '🔇' : '🔊';
+                button.setAttribute('data-muted', globalMuted ? 'true' : 'false');
                 
-                if (video) {
-                    // Toggle global mute state
-                    globalMuted = !globalMuted;
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     
-                    // Update ALL videos to match global mute state (Instagram behavior)
-                    videos.forEach(v => {
-                        v.muted = globalMuted;
-                    });
+                    const wrapper = this.closest('.bpr-video-wrapper');
+                    const video = wrapper.querySelector('video');
                     
-                    // Update ALL mute buttons to show consistent state
-                    document.querySelectorAll('.bpr-mute-toggle').forEach(btn => {
-                        btn.innerHTML = globalMuted ? '🔇' : '🔊';
-                    });
-                    
-                    // Show temporary feedback
-                    showInstagramIcon(wrapper, globalMuted ? '🔇' : '🔊', 'mute');
-                }
+                    if (video) {
+                        // Toggle global mute state
+                        globalMuted = !globalMuted;
+                        
+                        // Update ALL videos to match global mute state (Instagram behavior)
+                        videos.forEach(v => {
+                            v.muted = globalMuted;
+                        });
+                        
+                        // Update ALL mute buttons to show consistent state
+                        document.querySelectorAll('.bpr-mute-toggle').forEach(btn => {
+                            btn.innerHTML = globalMuted ? '🔇' : '🔊';
+                            btn.setAttribute('data-muted', globalMuted ? 'true' : 'false');
+                        });
+                        
+                        // Show temporary feedback
+                        showInstagramIcon(wrapper, globalMuted ? '🔇' : '🔊', 'mute');
+                    }
+                });
             });
-        });
+        }
+        
+        // Initialize mute buttons
+        initializeMuteButtons();
 
         // Instagram-style temporary icon animation (enhanced)
         function showInstagramIcon(wrapper, icon, type) {
@@ -245,6 +252,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     const container = document.querySelector('.bpr-feed-container');
                     container.insertAdjacentHTML('beforeend', data.data.html);
                     
+                    // Re-initialize mute buttons for new content
+                    initializeMuteButtons();
+                    
                     // Update button
                     this.dataset.page = currentPage + 1;
                     this.disabled = false;
@@ -299,6 +309,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.success) {
                 const container = document.querySelector('.bpr-grid-wrapper');
                 container.insertAdjacentHTML('beforeend', data.data.html);
+                
+                // Re-initialize mute buttons for new content
+                initializeMuteButtons();
                 
                 button.dataset.page = currentPage + 1;
                 button.disabled = false;
