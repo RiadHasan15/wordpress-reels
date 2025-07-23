@@ -854,17 +854,14 @@ function bpr_deactivate() {
     flush_rewrite_rules();
 }
 
-// Single reel template
-add_filter('single_template', 'bpr_single_template');
-function bpr_single_template($template) {
-    if (get_post_type() === 'bpr_reel') {
-        $plugin_template = plugin_dir_path(__FILE__) . 'templates/single-reel.php';
-        if (file_exists($plugin_template)) {
-            return $plugin_template;
-        }
-    }
-    return $template;
+// Flush rewrite rules on plugin activation to prevent template conflicts
+register_activation_hook(__FILE__, 'bpr_flush_rewrites');
+function bpr_flush_rewrites() {
+    bpr_register_post_type();
+    flush_rewrite_rules();
 }
+
+// Single reel template removed - using default WordPress template to maintain feed flow
 
 // Add meta boxes for admin
 add_action('add_meta_boxes', 'bpr_add_meta_boxes');
