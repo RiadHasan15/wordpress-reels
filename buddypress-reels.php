@@ -143,8 +143,6 @@ function bpr_handle_upload() {
     }
     
     update_post_meta($post_id, 'bpr_video', $att_id);
-    update_post_meta($post_id, 'bpr_views', 0);
-    update_post_meta($post_id, 'bpr_likes', 0);
 
     // Add BuddyPress activity
     if (function_exists('bp_activity_add')) {
@@ -437,14 +435,6 @@ function bpr_profile_feed_shortcode($atts) {
                         <?php endif; ?>
                         
                         <div class="bpr-reel-stats">
-                            <span class="bpr-stat-item">
-                                <span class="bpr-icon">👁️</span>
-                                <span><?php echo number_format($views); ?></span>
-                            </span>
-                            <span class="bpr-stat-item">
-                                <span class="bpr-icon">❤️</span>
-                                <span><?php echo number_format($likes); ?></span>
-                            </span>
                             <span class="bpr-stat-item">
                                 <span class="bpr-icon">📅</span>
                                 <span><?php echo human_time_diff(get_the_time('U'), current_time('timestamp')) . ' ' . __('ago', 'buddypress-reels'); ?></span>
@@ -956,19 +946,8 @@ function bpr_video_meta_box($post) {
 }
 
 function bpr_stats_meta_box($post) {
-    $views = get_post_meta($post->ID, 'bpr_views', true) ?: 0;
-    $likes = get_post_meta($post->ID, 'bpr_likes', true) ?: 0;
-    
     ?>
     <table class="form-table">
-        <tr>
-            <th><?php _e('Views', 'buddypress-reels'); ?></th>
-            <td><?php echo number_format($views); ?></td>
-        </tr>
-        <tr>
-            <th><?php _e('Likes', 'buddypress-reels'); ?></th>
-            <td><?php echo number_format($likes); ?></td>
-        </tr>
         <tr>
             <th><?php _e('Upload Date', 'buddypress-reels'); ?></th>
             <td><?php echo get_the_date(); ?></td>
@@ -1010,8 +989,6 @@ function bpr_admin_columns($columns) {
         $new_columns[$key] = $value;
         if ($key === 'title') {
             $new_columns['bpr_video'] = __('Video', 'buddypress-reels');
-            $new_columns['bpr_views'] = __('Views', 'buddypress-reels');
-            $new_columns['bpr_likes'] = __('Likes', 'buddypress-reels');
         }
     }
     return $new_columns;
@@ -1030,15 +1007,7 @@ function bpr_admin_column_content($column, $post_id) {
             }
             break;
             
-        case 'bpr_views':
-            $views = get_post_meta($post_id, 'bpr_views', true) ?: 0;
-            echo number_format($views);
-            break;
-            
-        case 'bpr_likes':
-            $likes = get_post_meta($post_id, 'bpr_likes', true) ?: 0;
-            echo number_format($likes);
-            break;
+
     }
 }
 
@@ -1096,10 +1065,7 @@ function bpr_get_reels_api($request) {
                 'name' => get_the_author_meta('display_name', $post->post_author),
                 'avatar' => get_avatar_url($post->post_author)
             ],
-            'stats' => [
-                'views' => intval(get_post_meta($post->ID, 'bpr_views', true) ?: 0),
-                'likes' => intval(get_post_meta($post->ID, 'bpr_likes', true) ?: 0)
-            ],
+
             'date_created' => $post->post_date,
             'permalink' => get_permalink($post->ID)
         ];
@@ -1141,10 +1107,7 @@ function bpr_get_reel_api($request) {
             'name' => get_the_author_meta('display_name', $post->post_author),
             'avatar' => get_avatar_url($post->post_author)
         ],
-        'stats' => [
-            'views' => intval(get_post_meta($post->ID, 'bpr_views', true) ?: 0),
-            'likes' => intval(get_post_meta($post->ID, 'bpr_likes', true) ?: 0)
-        ],
+
         'date_created' => $post->post_date,
         'permalink' => get_permalink($post->ID)
     ];
