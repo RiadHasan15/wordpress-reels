@@ -97,12 +97,12 @@ function bpr_handle_upload() {
         exit;
     }
 
-    // Create regular post with reel metadata (but make it private so it doesn't show in blog feeds)
+
     $post_data = [
         'post_title'   => sanitize_text_field($_POST['bpr_title']),
         'post_content' => sanitize_textarea_field($_POST['bpr_description'] ?? ''),
         'post_type'    => 'post', // Use regular posts
-        'post_status'  => 'private', // Make private so it doesn't appear in normal blog feeds
+
         'post_author'  => get_current_user_id()
     ];
     
@@ -238,7 +238,7 @@ function bpr_reels_feed_shortcode($atts) {
     
     $args = [
         'post_type'      => 'post', // Use regular posts
-        'post_status'    => 'private', // Only get private reel posts
+
         'posts_per_page' => intval($atts['count']),
         'orderby'        => sanitize_key($atts['orderby']),
         'order'          => 'DESC',
@@ -1086,7 +1086,7 @@ function bpr_get_reels_api($request) {
     
     $args = [
         'post_type' => 'post', // Use regular posts
-        'post_status' => 'private', // Only get private reel posts
+
         'posts_per_page' => $per_page,
         'paged' => $page,
         'orderby' => 'date',

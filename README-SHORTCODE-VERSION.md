@@ -10,8 +10,7 @@ This is the shortcode-only version of BuddyPress Reels Enhanced (v3.1). Instead 
 - ✅ **No Archive Pages**: No automatic `/reels/` archive page
 - ✅ **Pure Shortcode Approach**: Display reels anywhere using shortcodes
 - ✅ **Full Flexibility**: Place reel feeds in any page, post, or widget area
-- ✅ **Hidden from Blog Feed**: Reels are private posts that don't appear in normal blog feeds
-- ✅ **Same Great Features**: All video functionality, BuddyPress integration, and styling preserved
+
 
 ## Available Shortcodes
 
@@ -60,13 +59,7 @@ Add reels to sidebars or widget areas using the shortcode widget:
 
 ## How It Works
 
-### Video Storage
-- Videos are uploaded as regular WordPress posts with **private** status
-- Private status ensures reels don't appear in normal blog feeds or searches
-- Each reel post has metadata:
-  - `bpr_video`: Attachment ID of the video file
-  - `bpr_is_reel`: Flag marking the post as a reel (`1`)
-- Shortcodes bypass private post restrictions to show all reels
+
 
 ### BuddyPress Integration
 - Automatic activity stream integration
