@@ -1253,3 +1253,47 @@ body {
         justify-content: space-between;
     }
 }
+
+/* Archive page specific overrides */
+.post-type-archive-bpr_reel body,
+.post-type-archive-bpr_reel {
+    background: var(--bpr-dark) !important;
+    color: var(--bpr-text-primary) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.post-type-archive-bpr_reel .site-header,
+.post-type-archive-bpr_reel .site-footer {
+    display: none !important;
+}
+
+.post-type-archive-bpr_reel .site-main,
+.post-type-archive-bpr_reel .content-area,
+.post-type-archive-bpr_reel .site-content,
+.post-type-archive-bpr_reel .container,
+.post-type-archive-bpr_reel .main-content {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+/* Full-screen archive experience */
+.bpr-archive-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: var(--bpr-dark);
+    overflow: hidden;
+}
+
+.bpr-archive-fullscreen .bpr-feed {
+    height: 100vh !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}

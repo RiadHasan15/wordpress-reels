@@ -54,6 +54,15 @@ function bpr_activate() {
     add_option('bpr_settings', $default_opts);
 }
 
+// Ensure rewrite rules are flushed when needed
+add_action('init', 'bpr_check_rewrite_rules');
+function bpr_check_rewrite_rules() {
+    if (get_option('bpr_flush_rewrite_rules', false)) {
+        flush_rewrite_rules();
+        delete_option('bpr_flush_rewrite_rules');
+    }
+}
+
 // Enqueue styles/scripts
 add_action('wp_enqueue_scripts', 'bpr_enqueue_scripts');
 function bpr_enqueue_scripts() {
@@ -874,6 +883,36 @@ function bpr_single_template($template) {
         }
     }
     return $template;
+}
+
+// Archive template for reels - show vertical feed instead of card layout
+add_filter('archive_template', 'bpr_archive_template');
+function bpr_archive_template($template) {
+    if (is_post_type_archive('bpr_reel')) {
+        $plugin_template = plugin_dir_path(__FILE__) . 'templates/archive-reels.php';
+        if (file_exists($plugin_template)) {
+            return $plugin_template;
+        }
+    }
+    return $template;
+}
+
+// Add body class for reels archive
+add_filter('body_class', 'bpr_archive_body_class');
+function bpr_archive_body_class($classes) {
+    if (is_post_type_archive('bpr_reel')) {
+        $classes[] = 'bpr-archive-page';
+        $classes[] = 'bpr-dark-theme';
+    }
+    return $classes;
+}
+
+// Hide admin bar on reels archive for fullscreen experience
+add_action('wp', 'bpr_hide_admin_bar_on_archive');
+function bpr_hide_admin_bar_on_archive() {
+    if (is_post_type_archive('bpr_reel')) {
+        show_admin_bar(false);
+    }
 }
 
 // Add meta boxes for admin
