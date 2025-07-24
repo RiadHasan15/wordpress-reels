@@ -847,6 +847,14 @@ function bpr_settings_page() {
             <li><code>[bpr_profile_feed]</code> - <?php _e('Optimized profile feed with stats and pagination', 'buddypress-reels'); ?></li>
             <li><code>[bpr_reels_grid]</code> - <?php _e('TikTok-style 3-column grid for profile pages', 'buddypress-reels'); ?></li>
         </ul>
+        
+        <div class="notice notice-info">
+            <p><strong><?php _e('Instagram-Style Feed:', 'buddypress-reels'); ?></strong> 
+            <?php printf(__('Visit <a href="%s" target="_blank">%s/reels/</a> to see the automatic Instagram-style vertical feed. Individual reel pages are disabled to maintain the vertical scrolling experience.', 'buddypress-reels'), 
+                get_post_type_archive_link('bpr_reel'), 
+                home_url()
+            ); ?></p>
+        </div>
     </div>
     <?php
 }
@@ -879,6 +887,7 @@ function bpr_redirect_single_reel() {
         exit;
     }
 }
+
 
 // Add meta boxes for admin
 add_action('add_meta_boxes', 'bpr_add_meta_boxes');
