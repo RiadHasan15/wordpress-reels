@@ -1,46 +1,17 @@
 <?php
 /**
  * Plugin Name: BuddyPress Reels Enhanced
- * Description: Vertical video reels with optimized profile feed, stats display, and seamless BuddyPress integration.
- * Version: 3.0
+ * Description: Vertical video reels with optimized profile feed, stats display, and seamless BuddyPress integration - Shortcode only version.
+ * Version: 3.1
  * Author: Riad Hasan
  * 
  */
 
 if (!defined('ABSPATH')) exit;
 
-// Register custom post type
-add_action('init', 'bpr_register_post_type');
-function bpr_register_post_type() {
-    register_post_type('bpr_reel', [
-        'labels' => [
-            'name' => 'Reels',
-            'singular_name' => 'Reel',
-            'menu_name' => 'Reels',
-            'add_new' => 'Add New Reel',
-            'add_new_item' => 'Add New Reel',
-            'edit_item' => 'Edit Reel',
-            'new_item' => 'New Reel',
-            'view_item' => 'View Reel',
-            'search_items' => 'Search Reels',
-            'not_found' => 'No reels found',
-            'not_found_in_trash' => 'No reels found in trash'
-        ],
-        'public' => true,
-        'show_in_menu' => true,
-        'supports' => ['title', 'editor', 'author', 'thumbnail'],
-        'has_archive' => true,
-        'rewrite' => ['slug' => 'reels'],
-        'menu_icon' => 'dashicons-video-alt3'
-    ]);
-}
-
-// Plugin activation - create tables and set defaults
+// Plugin activation - set defaults (no post type registration)
 register_activation_hook(__FILE__, 'bpr_activate');
 function bpr_activate() {
-    bpr_register_post_type();
-    flush_rewrite_rules();
-    
     // Set default options
     $default_opts = [
         'video_height'  => 'calc(100vh - 80px)',
@@ -57,8 +28,8 @@ function bpr_activate() {
 // Enqueue styles/scripts
 add_action('wp_enqueue_scripts', 'bpr_enqueue_scripts');
 function bpr_enqueue_scripts() {
-    wp_enqueue_style('bpr-style', plugin_dir_url(__FILE__) . 'css/style.css', [], '3.0');
-    wp_enqueue_script('bpr-script', plugin_dir_url(__FILE__) . 'js/scripts.js', ['jquery'], '3.0', true);
+    wp_enqueue_style('bpr-style', plugin_dir_url(__FILE__) . 'css/style.css', [], '3.1');
+    wp_enqueue_script('bpr-script', plugin_dir_url(__FILE__) . 'js/scripts.js', ['jquery'], '3.1', true);
 
     $opts = get_option('bpr_settings', []);
     $opts['ajax_url'] = admin_url('admin-ajax.php');
@@ -66,7 +37,7 @@ function bpr_enqueue_scripts() {
     wp_localize_script('bpr-script', 'bprSettings', $opts);
 }
 
-// Handle reel uploads
+// Handle reel uploads (now creates regular posts with video metadata)
 add_action('admin_post_bpr_upload_reel', 'bpr_handle_upload');
 add_action('admin_post_nopriv_bpr_upload_reel', 'bpr_handle_upload');
 
@@ -115,11 +86,11 @@ function bpr_handle_upload() {
         exit;
     }
 
-    // Create post
+    // Create regular post with reel metadata
     $post_data = [
         'post_title'   => sanitize_text_field($_POST['bpr_title']),
         'post_content' => sanitize_textarea_field($_POST['bpr_description'] ?? ''),
-        'post_type'    => 'bpr_reel',
+        'post_type'    => 'post', // Use regular posts
         'post_status'  => 'publish',
         'post_author'  => get_current_user_id()
     ];
@@ -142,7 +113,9 @@ function bpr_handle_upload() {
         exit;
     }
     
+    // Mark this post as a reel and store video
     update_post_meta($post_id, 'bpr_video', $att_id);
+    update_post_meta($post_id, 'bpr_is_reel', '1'); // Mark as reel post
 
     // Add BuddyPress activity
     if (function_exists('bp_activity_add')) {
@@ -150,16 +123,16 @@ function bpr_handle_upload() {
             bp_core_get_userlink(get_current_user_id()) : 
             get_the_author_meta('display_name', get_current_user_id());
             
-        // Link to reels archive instead of individual reel for Instagram-style flow
-        $reels_archive_url = get_post_type_archive_link('bpr_reel') ?: home_url('/');
+        // Link to home page since we don't have archive
+        $reels_feed_url = home_url('/');
         
         $activity_id = bp_activity_add([
             'user_id'      => get_current_user_id(),
             'component'    => 'reels',
             'type'         => 'bpr_reel_upload',
             'action'       => sprintf(__('%s uploaded a new Reel', 'buddypress-reels'), $user_link),
-            'content'      => sprintf(__('"%s" - <a href="%s">View in Reels Feed</a>', 'buddypress-reels'), get_the_title($post_id), $reels_archive_url),
-            'primary_link' => $reels_archive_url,
+            'content'      => sprintf(__('"%s" - <a href="%s">View Reel</a>', 'buddypress-reels'), get_the_title($post_id), $reels_feed_url),
+            'primary_link' => $reels_feed_url,
             'item_id'      => $post_id,
             'recorded_time'=> bp_core_current_time()
         ]);
@@ -250,7 +223,7 @@ function bpr_reels_feed_shortcode($atts) {
     ], $atts);
     
     $args = [
-        'post_type'      => 'bpr_reel',
+        'post_type'      => 'post', // Use regular posts
         'post_status'    => 'publish',
         'posts_per_page' => intval($atts['count']),
         'orderby'        => sanitize_key($atts['orderby']),
@@ -259,6 +232,11 @@ function bpr_reels_feed_shortcode($atts) {
             [
                 'key' => 'bpr_video',
                 'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
             ]
         ]
     ];
@@ -356,7 +334,7 @@ function bpr_profile_feed_shortcode($atts) {
     }
     
     $query = new WP_Query([
-        'post_type'      => 'bpr_reel',
+        'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
         'post_status'    => 'publish',
         'posts_per_page' => intval($atts['posts_per_page']),
@@ -366,6 +344,11 @@ function bpr_profile_feed_shortcode($atts) {
             [
                 'key' => 'bpr_video',
                 'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
             ]
         ]
     ]);
@@ -477,7 +460,7 @@ function bpr_reels_grid_shortcode($atts) {
     }
     
     $query = new WP_Query([
-        'post_type'      => 'bpr_reel',
+        'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
         'post_status'    => 'publish',
         'posts_per_page' => intval($atts['posts_per_page']),
@@ -487,6 +470,11 @@ function bpr_reels_grid_shortcode($atts) {
             [
                 'key' => 'bpr_video',
                 'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
             ]
         ]
     ]);
@@ -594,7 +582,7 @@ function bpr_handle_load_more_grid_reels() {
     }
     
     $query = new WP_Query([
-        'post_type'      => 'bpr_reel',
+        'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
         'post_status'    => 'publish',
         'posts_per_page' => $posts_per_page,
@@ -605,6 +593,11 @@ function bpr_handle_load_more_grid_reels() {
             [
                 'key' => 'bpr_video',
                 'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
             ]
         ]
     ]);
@@ -671,7 +664,7 @@ function bpr_handle_load_more_profile_reels() {
     }
     
     $query = new WP_Query([
-        'post_type'      => 'bpr_reel',
+        'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
         'post_status'    => 'publish',
         'posts_per_page' => $posts_per_page,
@@ -682,6 +675,11 @@ function bpr_handle_load_more_profile_reels() {
             [
                 'key' => 'bpr_video',
                 'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
             ]
         ]
     ]);
@@ -753,7 +751,7 @@ function bpr_handle_load_more_profile_reels() {
     ]);
 }
 
-// Add BuddyPress profile tab
+// BuddyPress profile tab (optional - can be added via shortcodes in profile pages)
 add_action('bp_setup_nav', 'bpr_setup_nav');
 function bpr_setup_nav() {
     if (!bp_is_active('members')) return;
@@ -849,11 +847,8 @@ function bpr_settings_page() {
         </ul>
         
         <div class="notice notice-info">
-            <p><strong><?php _e('Instagram-Style Feed:', 'buddypress-reels'); ?></strong> 
-            <?php printf(__('Visit <a href="%s" target="_blank">%s/reels/</a> to see the automatic Instagram-style vertical feed. Individual reel pages are disabled to maintain the vertical scrolling experience.', 'buddypress-reels'), 
-                get_post_type_archive_link('bpr_reel'), 
-                home_url()
-            ); ?></p>
+            <p><strong><?php _e('Shortcode-Based Reels:', 'buddypress-reels'); ?></strong> 
+            <?php _e('This version uses shortcodes for maximum flexibility. Use [bpr_reels_feed] to display the Instagram-style vertical feed anywhere on your site. Reels are stored as regular posts with video metadata.', 'buddypress-reels'); ?></p>
         </div>
     </div>
     <?php
@@ -868,25 +863,13 @@ function bpr_deactivate() {
 // Flush rewrite rules on plugin activation to prevent template conflicts
 register_activation_hook(__FILE__, 'bpr_flush_rewrites');
 function bpr_flush_rewrites() {
-    bpr_register_post_type();
+    // No longer needed as post type is removed
+    // bpr_register_post_type(); 
     flush_rewrite_rules();
 }
 
-// Single reel template removed - redirect to main feed for Instagram-style experience
-// This ensures all reel viewing happens in the vertical feed, not individual pages
-add_action('template_redirect', 'bpr_redirect_single_reel');
-function bpr_redirect_single_reel() {
-    if (is_singular('bpr_reel')) {
-        // Redirect to the main reels feed page or archive
-        $redirect_url = get_post_type_archive_link('bpr_reel');
-        if (!$redirect_url) {
-            // Fallback to home page if no archive page exists
-            $redirect_url = home_url('/');
-        }
-        wp_redirect($redirect_url, 301);
-        exit;
-    }
-}
+// Single reel redirect functionality removed since we're using regular posts now
+// Individual posts can still be viewed normally as regular blog posts
 
 
 // Add meta boxes for admin
@@ -896,7 +879,7 @@ function bpr_add_meta_boxes() {
         'bpr_video_meta',
         __('Reel Video', 'buddypress-reels'),
         'bpr_video_meta_box',
-        'bpr_reel',
+        'post', // Use 'post' for regular posts
         'normal',
         'high'
     );
@@ -905,7 +888,7 @@ function bpr_add_meta_boxes() {
         'bpr_stats_meta',
         __('Reel Statistics', 'buddypress-reels'),
         'bpr_stats_meta_box',
-        'bpr_reel',
+        'post', // Use 'post' for regular posts
         'side',
         'default'
     );
@@ -1005,7 +988,7 @@ function bpr_save_meta_box($post_id) {
 }
 
 // Add admin columns
-add_filter('manage_bpr_reel_posts_columns', 'bpr_admin_columns');
+add_filter('manage_post_posts_columns', 'bpr_admin_columns'); // Changed from 'bpr_reel_posts_columns'
 function bpr_admin_columns($columns) {
     $new_columns = [];
     foreach ($columns as $key => $value) {
@@ -1017,20 +1000,24 @@ function bpr_admin_columns($columns) {
     return $new_columns;
 }
 
-add_action('manage_bpr_reel_posts_custom_column', 'bpr_admin_column_content', 10, 2);
+add_action('manage_post_posts_custom_column', 'bpr_admin_column_content', 10, 2); // Changed from 'bpr_reel_posts_custom_column'
 function bpr_admin_column_content($column, $post_id) {
     switch ($column) {
         case 'bpr_video':
-            $video_id = get_post_meta($post_id, 'bpr_video', true);
-            if ($video_id) {
-                $video_url = wp_get_attachment_url($video_id);
-                echo '<video width="60" height="80" muted><source src="' . esc_url($video_url) . '" type="video/mp4"></video>';
+            // Only show video column for reel posts
+            $is_reel = get_post_meta($post_id, 'bpr_is_reel', true);
+            if ($is_reel) {
+                $video_id = get_post_meta($post_id, 'bpr_video', true);
+                if ($video_id) {
+                    $video_url = wp_get_attachment_url($video_id);
+                    echo '<video width="60" height="80" muted><source src="' . esc_url($video_url) . '" type="video/mp4"></video>';
+                } else {
+                    echo '—';
+                }
             } else {
                 echo '—';
             }
             break;
-            
-
     }
 }
 
@@ -1057,12 +1044,23 @@ function bpr_get_reels_api($request) {
     $user_id = intval($params['user_id'] ?? 0);
     
     $args = [
-        'post_type' => 'bpr_reel',
+        'post_type' => 'post', // Use regular posts
         'post_status' => 'publish',
         'posts_per_page' => $per_page,
         'paged' => $page,
         'orderby' => 'date',
-        'order' => 'DESC'
+        'order' => 'DESC',
+        'meta_query' => [
+            [
+                'key' => 'bpr_video',
+                'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
+            ]
+        ]
     ];
     
     if ($user_id) {
@@ -1090,7 +1088,7 @@ function bpr_get_reels_api($request) {
             ],
 
             'date_created' => $post->post_date,
-            'reels_feed_url' => get_post_type_archive_link('bpr_reel') ?: home_url('/')
+            'reels_feed_url' => home_url('/reels/') // Updated URL
         ];
     }
     
@@ -1109,8 +1107,14 @@ function bpr_get_reel_api($request) {
     $reel_id = intval($request['id']);
     $post = get_post($reel_id);
     
-    if (!$post || $post->post_type !== 'bpr_reel') {
+    if (!$post || $post->post_type !== 'post') { // Changed from 'bpr_reel'
         return new WP_Error('reel_not_found', __('Reel not found', 'buddypress-reels'), ['status' => 404]);
+    }
+    
+    // Check if this post is actually a reel
+    $is_reel = get_post_meta($post->ID, 'bpr_is_reel', true);
+    if (!$is_reel) {
+        return new WP_Error('not_a_reel', __('This post is not a reel', 'buddypress-reels'), ['status' => 404]);
     }
     
     $video_id = get_post_meta($post->ID, 'bpr_video', true);
@@ -1132,7 +1136,7 @@ function bpr_get_reel_api($request) {
         ],
 
         'date_created' => $post->post_date,
-        'reels_feed_url' => get_post_type_archive_link('bpr_reel') ?: home_url('/')
+        'reels_feed_url' => home_url('/reels/') // Updated URL
     ];
 }
 
@@ -1141,7 +1145,7 @@ add_action('admin_enqueue_scripts', 'bpr_admin_scripts');
 function bpr_admin_scripts($hook) {
     global $post_type;
     
-    if ($post_type === 'bpr_reel' && in_array($hook, ['post.php', 'post-new.php'])) {
+    if ($post_type === 'post' && in_array($hook, ['post.php', 'post-new.php'])) { // Changed from 'bpr_reel'
         wp_enqueue_media();
     }
 }
