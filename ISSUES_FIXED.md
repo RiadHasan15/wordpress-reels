@@ -55,6 +55,16 @@ This document lists all the issues that were identified and resolved during the 
 - **Fix**: Updated to accept MP4, WebM, and MOV formats as configured in plugin settings
 - **Impact**: Users can now upload videos in supported formats
 
+#### Single Reel Template Removal
+- **Issue**: Individual reel pages conflicted with Instagram-style vertical feed experience
+- **Location**: `templates/single-reel.php` and related template hooks
+- **Fix**: Removed single reel template and added 301 redirects to main feed
+- **Impact**: All reels now display only in the Instagram-style vertical scrolling feed
+- **Additional Changes**:
+  - Added `template_redirect` hook to redirect single reel URLs to main feed
+  - Updated BuddyPress activity links to point to reels feed instead of individual posts
+  - Modified REST API endpoints to return `reels_feed_url` instead of individual `permalink`
+
 ### 4. CSS Issues
 
 #### Syntax Validation
@@ -70,7 +80,7 @@ This document lists all the issues that were identified and resolved during the 
   - `css/style.css` (styles)
   - `js/scripts.js` (JavaScript)
   - `templates/upload-form.php` (upload form)
-  - `templates/single-reel.php` (single reel template - **CREATED**)
+  - `templates/single-reel.php` (single reel template - **REMOVED**)
 
 ## Code Quality Improvements Made
 
@@ -110,6 +120,8 @@ The plugin is production-ready with proper error handling, security measures, an
 ## Files Modified
 
 1. `js/scripts.js` - Removed debug statements, improved error handling
+2. `templates/single-reel.php` - **REMOVED** to maintain Instagram-style vertical feed flow
+3. `buddypress-reels.php` - Removed single template hooks and redirects
 
 
 ## Recommendations for Future Development
