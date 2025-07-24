@@ -17,30 +17,63 @@ if (!current_user_can('manage_options')) {
 get_header(); ?>
 
 <div style="max-width: 800px; margin: 2rem auto; padding: 1rem; background: #f8fafc; border-radius: 12px;">
-    <h1>BuddyPress Reels Feed Debug</h1>
+    <h1>BuddyPress Reels Feed Debug (Shortcode Version)</h1>
     
     <h2>1. Plugin Status</h2>
     <p><strong>Plugin Active:</strong> <?php echo is_plugin_active('buddypress-reels/buddypress-reels.php') ? '✅ Yes' : '❌ No'; ?></p>
-    <p><strong>Post Type Registered:</strong> <?php echo post_type_exists('bpr_reel') ? '✅ Yes' : '❌ No'; ?></p>
     <p><strong>Shortcode Registered:</strong> <?php echo shortcode_exists('bpr_reels_feed') ? '✅ Yes' : '❌ No'; ?></p>
+    <p><strong>Note:</strong> This version uses regular posts with reel metadata instead of custom post types.</p>
     
     <h2>2. Reel Posts Count</h2>
     <?php
-    $reel_count = wp_count_posts('bpr_reel');
-    echo "<p><strong>Published Reels:</strong> " . ($reel_count->publish ?? 0) . "</p>";
-    echo "<p><strong>Draft Reels:</strong> " . ($reel_count->draft ?? 0) . "</p>";
+    // Query posts that are marked as reels
+    $reel_query = new WP_Query([
+        'post_type' => 'post',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'meta_query' => [
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
+            ]
+        ]
+    ]);
+    
+    echo "<p><strong>Published Reels:</strong> " . $reel_query->found_posts . "</p>";
+    
+    // Query draft reels
+    $draft_reel_query = new WP_Query([
+        'post_type' => 'post',
+        'post_status' => 'draft',
+        'posts_per_page' => -1,
+        'meta_query' => [
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
+            ]
+        ]
+    ]);
+    
+    echo "<p><strong>Draft Reels:</strong> " . $draft_reel_query->found_posts . "</p>";
     ?>
     
     <h2>3. Sample Reels Query</h2>
     <?php
     $test_query = new WP_Query([
-        'post_type' => 'bpr_reel',
+        'post_type' => 'post',
         'post_status' => 'publish',
         'posts_per_page' => 5,
         'meta_query' => [
             [
                 'key' => 'bpr_video',
                 'compare' => 'EXISTS'
+            ],
+            [
+                'key' => 'bpr_is_reel',
+                'value' => '1',
+                'compare' => '='
             ]
         ]
     ]);
@@ -53,7 +86,8 @@ get_header(); ?>
             $test_query->the_post();
             $video_id = get_post_meta(get_the_ID(), 'bpr_video', true);
             $video_url = $video_id ? wp_get_attachment_url($video_id) : 'No video';
-            echo "<li>" . get_the_title() . " - Video: " . ($video_url ? '✅ Has video' : '❌ No video') . "</li>";
+            $is_reel = get_post_meta(get_the_ID(), 'bpr_is_reel', true);
+            echo "<li>" . get_the_title() . " - Video: " . ($video_url !== 'No video' ? '✅ Has video' : '❌ No video') . " - Reel: " . ($is_reel ? '✅ Yes' : '❌ No') . "</li>";
         }
         echo "</ul>";
         wp_reset_postdata();
@@ -84,7 +118,7 @@ get_header(); ?>
     <p>Check your browser's developer console for any JavaScript errors.</p>
     
     <script>
-    console.log('BuddyPress Reels Debug - Page loaded');
+    console.log('BuddyPress Reels Debug - Page loaded (Shortcode Version)');
     
     // Check if jQuery is available
     if (typeof jQuery !== 'undefined') {
