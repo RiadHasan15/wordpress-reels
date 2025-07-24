@@ -66,7 +66,7 @@ if ($reels_query->have_posts()) {
 wp_reset_postdata();
 
 echo '<h3>Test Archive Page:</h3>';
-echo '<p><a href="' . home_url('/reels/') . '" target="_blank" style="background: #ff6b6b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🎬 Open Reels Archive (Vertical Feed)</a></p>';
+
 
 echo '<h3>Shortcode Tests:</h3>';
 echo '<h4>Upload Form:</h4>';

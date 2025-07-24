@@ -11,11 +11,6 @@
 ## What Was Added 🚀
 
 ### 1. **Custom Archive Template** (`templates/archive-reels.php`)
-- Full-screen TikTok-style experience
-- Floating header with back button and upload option
-- Mobile-optimized design
-- No theme interference
-- Hidden admin bar for immersive experience
 
 ### 2. **Archive Template Handler** (in `buddypress-reels.php`)
 ```php
@@ -38,16 +33,7 @@ function bpr_archive_template($template) {
 - Theme conflict prevention
 - Mobile-first approach
 
-### 4. **Admin Bar Control**
-```php
-// Hide admin bar on reels archive for fullscreen experience
-add_action('wp', 'bpr_hide_admin_bar_on_archive');
-function bpr_hide_admin_bar_on_archive() {
-    if (is_post_type_archive('bpr_reel')) {
-        show_admin_bar(false);
-    }
-}
-```
+
 
 ### 5. **Test File** (`test-reels.php`)
 - Diagnostic tool to check plugin status
@@ -65,31 +51,11 @@ function bpr_hide_admin_bar_on_archive() {
    - Theme template
    - WordPress default
 
-3. **Full-Screen Experience**:
-   - Removes theme header/footer
-   - Hides admin bar
-   - Creates TikTok-style floating header
-   - Uses entire viewport for videos
 
 ---
 
 ## Features of the New Archive Page 📱
 
-### **TikTok-Style Interface**
-- Full-screen vertical video feed
-- Floating header with controls
-- Back button to navigate away
-- Upload button for logged-in users
-- Mobile-optimized touch controls
-
-### **Theme Independence**
-- Completely bypasses theme styling
-- Uses its own HTML structure
-- Prevents theme conflicts
-- Works with any WordPress theme
-
-### **Performance Optimized**
-- Loads 100 reels for smooth scrolling
 - Lazy loading for videos
 - Smooth scroll snapping
 - Efficient CSS with minimal conflicts
