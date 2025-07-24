@@ -25,6 +25,17 @@ function bpr_activate() {
     add_option('bpr_settings', $default_opts);
 }
 
+// Helper function to allow viewing all private reel posts in feeds
+function bpr_include_private_reels($where) {
+    global $wpdb;
+    // Remove the restriction on private posts for reel queries
+    // This allows all users to see all reels in the feed regardless of author
+    if (strpos($where, 'post_status') !== false && strpos($where, 'private') !== false) {
+        $where = str_replace("AND ({$wpdb->posts}.post_author = " . get_current_user_id() . " OR {$wpdb->posts}.post_status != 'private')", "", $where);
+    }
+    return $where;
+}
+
 // Enqueue styles/scripts
 add_action('wp_enqueue_scripts', 'bpr_enqueue_scripts');
 function bpr_enqueue_scripts() {
@@ -86,12 +97,12 @@ function bpr_handle_upload() {
         exit;
     }
 
-    // Create regular post with reel metadata
+    // Create regular post with reel metadata (but make it private so it doesn't show in blog feeds)
     $post_data = [
         'post_title'   => sanitize_text_field($_POST['bpr_title']),
         'post_content' => sanitize_textarea_field($_POST['bpr_description'] ?? ''),
         'post_type'    => 'post', // Use regular posts
-        'post_status'  => 'publish',
+        'post_status'  => 'private', // Make private so it doesn't appear in normal blog feeds
         'post_author'  => get_current_user_id()
     ];
     
@@ -222,9 +233,12 @@ function bpr_reels_feed_shortcode($atts) {
         'orderby' => 'date'
     ], $atts);
     
+    // For private posts, we need to override capability check temporarily
+    add_filter('posts_where', 'bpr_include_private_reels');
+    
     $args = [
         'post_type'      => 'post', // Use regular posts
-        'post_status'    => 'publish',
+        'post_status'    => 'private', // Only get private reel posts
         'posts_per_page' => intval($atts['count']),
         'orderby'        => sanitize_key($atts['orderby']),
         'order'          => 'DESC',
@@ -246,6 +260,9 @@ function bpr_reels_feed_shortcode($atts) {
     }
     
     $query = new WP_Query($args);
+    
+    // Remove the filter after query
+    remove_filter('posts_where', 'bpr_include_private_reels');
     
     if (!$query->have_posts()) {
         return '<div class="bpr-no-reels"><p>' . __('No reels found.', 'buddypress-reels') . '</p></div>';
@@ -333,10 +350,13 @@ function bpr_profile_feed_shortcode($atts) {
         return '<p>' . __('No user specified.', 'buddypress-reels') . '</p>';
     }
     
+    // For private posts, we need to override capability check temporarily
+    add_filter('posts_where', 'bpr_include_private_reels');
+    
     $query = new WP_Query([
         'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
-        'post_status'    => 'publish',
+        'post_status'    => 'private', // Only get private reel posts
         'posts_per_page' => intval($atts['posts_per_page']),
         'orderby'        => 'date',
         'order'          => 'DESC',
@@ -352,6 +372,9 @@ function bpr_profile_feed_shortcode($atts) {
             ]
         ]
     ]);
+    
+    // Remove the filter after query
+    remove_filter('posts_where', 'bpr_include_private_reels');
     
     if (!$query->have_posts()) {
         return '<div class="bpr-no-reels">
@@ -459,10 +482,13 @@ function bpr_reels_grid_shortcode($atts) {
         return '<p>' . __('No user specified.', 'buddypress-reels') . '</p>';
     }
     
+    // For private posts, we need to override capability check temporarily
+    add_filter('posts_where', 'bpr_include_private_reels');
+    
     $query = new WP_Query([
         'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
-        'post_status'    => 'publish',
+        'post_status'    => 'private', // Only get private reel posts
         'posts_per_page' => intval($atts['posts_per_page']),
         'orderby'        => 'date',
         'order'          => 'DESC',
@@ -478,6 +504,9 @@ function bpr_reels_grid_shortcode($atts) {
             ]
         ]
     ]);
+    
+    // Remove the filter after query
+    remove_filter('posts_where', 'bpr_include_private_reels');
     
     if (!$query->have_posts()) {
         return '<div class="bpr-no-reels">
@@ -581,10 +610,13 @@ function bpr_handle_load_more_grid_reels() {
         wp_send_json_error(__('Invalid user.', 'buddypress-reels'));
     }
     
+    // For private posts, we need to override capability check temporarily
+    add_filter('posts_where', 'bpr_include_private_reels');
+    
     $query = new WP_Query([
         'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
-        'post_status'    => 'publish',
+        'post_status'    => 'private', // Only get private reel posts
         'posts_per_page' => $posts_per_page,
         'paged'          => $page,
         'orderby'        => 'date',
@@ -601,6 +633,9 @@ function bpr_handle_load_more_grid_reels() {
             ]
         ]
     ]);
+    
+    // Remove the filter after query
+    remove_filter('posts_where', 'bpr_include_private_reels');
     
     if (!$query->have_posts()) {
         wp_send_json_error(__('No more reels found.', 'buddypress-reels'));
@@ -663,10 +698,13 @@ function bpr_handle_load_more_profile_reels() {
         wp_send_json_error(__('Invalid user.', 'buddypress-reels'));
     }
     
+    // For private posts, we need to override capability check temporarily
+    add_filter('posts_where', 'bpr_include_private_reels');
+    
     $query = new WP_Query([
         'post_type'      => 'post', // Use regular posts
         'author'         => $user_id,
-        'post_status'    => 'publish',
+        'post_status'    => 'private', // Only get private reel posts
         'posts_per_page' => $posts_per_page,
         'paged'          => $page,
         'orderby'        => 'date',
@@ -683,6 +721,9 @@ function bpr_handle_load_more_profile_reels() {
             ]
         ]
     ]);
+    
+    // Remove the filter after query
+    remove_filter('posts_where', 'bpr_include_private_reels');
     
     if (!$query->have_posts()) {
         wp_send_json_error(__('No more reels found.', 'buddypress-reels'));
@@ -1045,7 +1086,7 @@ function bpr_get_reels_api($request) {
     
     $args = [
         'post_type' => 'post', // Use regular posts
-        'post_status' => 'publish',
+        'post_status' => 'private', // Only get private reel posts
         'posts_per_page' => $per_page,
         'paged' => $page,
         'orderby' => 'date',
@@ -1067,7 +1108,14 @@ function bpr_get_reels_api($request) {
         $args['author'] = $user_id;
     }
     
+    // For private posts, we need to override capability check temporarily
+    add_filter('posts_where', 'bpr_include_private_reels');
+    
     $query = new WP_Query($args);
+    
+    // Remove the filter after query
+    remove_filter('posts_where', 'bpr_include_private_reels');
+    
     $reels = [];
     
     foreach ($query->posts as $post) {

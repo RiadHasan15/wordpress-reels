@@ -26,10 +26,10 @@ get_header(); ?>
     
     <h2>2. Reel Posts Count</h2>
     <?php
-    // Query posts that are marked as reels
+    // Query posts that are marked as reels (now private)
     $reel_query = new WP_Query([
         'post_type' => 'post',
-        'post_status' => 'publish',
+        'post_status' => 'private',
         'posts_per_page' => -1,
         'meta_query' => [
             [
@@ -40,7 +40,7 @@ get_header(); ?>
         ]
     ]);
     
-    echo "<p><strong>Published Reels:</strong> " . $reel_query->found_posts . "</p>";
+    echo "<p><strong>Private Reels:</strong> " . $reel_query->found_posts . "</p>";
     
     // Query draft reels
     $draft_reel_query = new WP_Query([
@@ -63,7 +63,7 @@ get_header(); ?>
     <?php
     $test_query = new WP_Query([
         'post_type' => 'post',
-        'post_status' => 'publish',
+        'post_status' => 'private',
         'posts_per_page' => 5,
         'meta_query' => [
             [
