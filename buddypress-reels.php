@@ -907,13 +907,7 @@ function bpr_archive_body_class($classes) {
     return $classes;
 }
 
-// Hide admin bar on reels archive for fullscreen experience
-add_action('wp', 'bpr_hide_admin_bar_on_archive');
-function bpr_hide_admin_bar_on_archive() {
-    if (is_post_type_archive('bpr_reel')) {
-        show_admin_bar(false);
-    }
-}
+// Note: Admin bar and theme elements are preserved for archive page
 
 // Add meta boxes for admin
 add_action('add_meta_boxes', 'bpr_add_meta_boxes');
