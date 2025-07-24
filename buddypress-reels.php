@@ -888,28 +888,6 @@ function bpr_redirect_single_reel() {
     }
 }
 
-// Load custom archive template for reels to show Instagram-style feed
-add_filter('archive_template', 'bpr_archive_template');
-function bpr_archive_template($template) {
-    if (is_post_type_archive('bpr_reel')) {
-        $plugin_template = plugin_dir_path(__FILE__) . 'templates/archive-bpr_reel.php';
-        if (file_exists($plugin_template)) {
-            return $plugin_template;
-        }
-    }
-    return $template;
-}
-
-// Alternative: Redirect archive to a custom page (uncomment if preferred)
-// add_action('template_redirect', 'bpr_redirect_archive_to_page');
-// function bpr_redirect_archive_to_page() {
-//     if (is_post_type_archive('bpr_reel')) {
-//         // Replace 'reels-feed' with your page slug that contains [bpr_reels_feed]
-//         $custom_page_url = home_url('/reels-feed/');
-//         wp_redirect($custom_page_url, 301);
-//         exit;
-//     }
-// }
 
 // Add meta boxes for admin
 add_action('add_meta_boxes', 'bpr_add_meta_boxes');
