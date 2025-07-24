@@ -1254,22 +1254,5 @@ body {
     }
 }
 
-/* Archive page integration with theme */
-.bpr-archive-page {
-    background: var(--bpr-light-secondary, #f8f9fa);
-    min-height: 100vh;
-}
 
-/* Ensure proper theme container usage */
-.bpr-archive-page .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Theme compatibility for archive */
-.post-type-archive-bpr_reel .bpr-feed {
-    background: var(--bpr-dark, #0a0a0b);
-    border-radius: var(--bpr-radius-lg, 12px);
-    overflow: hidden;
 }

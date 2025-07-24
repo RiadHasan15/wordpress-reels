@@ -907,7 +907,7 @@ function bpr_archive_body_class($classes) {
     return $classes;
 }
 
-// Note: Admin bar and theme elements are preserved for archive page
+
 
 // Add meta boxes for admin
 add_action('add_meta_boxes', 'bpr_add_meta_boxes');
