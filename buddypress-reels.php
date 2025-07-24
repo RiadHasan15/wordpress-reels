@@ -150,13 +150,16 @@ function bpr_handle_upload() {
             bp_core_get_userlink(get_current_user_id()) : 
             get_the_author_meta('display_name', get_current_user_id());
             
+        // Link to reels archive instead of individual reel for Instagram-style flow
+        $reels_archive_url = get_post_type_archive_link('bpr_reel') ?: home_url('/');
+        
         $activity_id = bp_activity_add([
             'user_id'      => get_current_user_id(),
             'component'    => 'reels',
             'type'         => 'bpr_reel_upload',
             'action'       => sprintf(__('%s uploaded a new Reel', 'buddypress-reels'), $user_link),
-            'content'      => '<a href="'.get_permalink($post_id).'">'.get_the_title($post_id).'</a>',
-            'primary_link' => get_permalink($post_id),
+            'content'      => sprintf(__('"%s" - <a href="%s">View in Reels Feed</a>', 'buddypress-reels'), get_the_title($post_id), $reels_archive_url),
+            'primary_link' => $reels_archive_url,
             'item_id'      => $post_id,
             'recorded_time'=> bp_core_current_time()
         ]);
@@ -861,7 +864,21 @@ function bpr_flush_rewrites() {
     flush_rewrite_rules();
 }
 
-// Single reel template removed - using default WordPress template to maintain feed flow
+// Single reel template removed - redirect to main feed for Instagram-style experience
+// This ensures all reel viewing happens in the vertical feed, not individual pages
+add_action('template_redirect', 'bpr_redirect_single_reel');
+function bpr_redirect_single_reel() {
+    if (is_singular('bpr_reel')) {
+        // Redirect to the main reels feed page or archive
+        $redirect_url = get_post_type_archive_link('bpr_reel');
+        if (!$redirect_url) {
+            // Fallback to home page if no archive page exists
+            $redirect_url = home_url('/');
+        }
+        wp_redirect($redirect_url, 301);
+        exit;
+    }
+}
 
 // Add meta boxes for admin
 add_action('add_meta_boxes', 'bpr_add_meta_boxes');
@@ -1064,7 +1081,7 @@ function bpr_get_reels_api($request) {
             ],
 
             'date_created' => $post->post_date,
-            'permalink' => get_permalink($post->ID)
+            'reels_feed_url' => get_post_type_archive_link('bpr_reel') ?: home_url('/')
         ];
     }
     
@@ -1106,7 +1123,7 @@ function bpr_get_reel_api($request) {
         ],
 
         'date_created' => $post->post_date,
-        'permalink' => get_permalink($post->ID)
+        'reels_feed_url' => get_post_type_archive_link('bpr_reel') ?: home_url('/')
     ];
 }
 
